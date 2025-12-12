@@ -153,81 +153,89 @@ tab_scanner, tab_model, tab_api, tab_threats, tab_arch, tab_logic = st.tabs(
 # 1️⃣ SCANNER TAB
 # =========================================================
 with tab_scanner:
+
     st.markdown("""
     <style>
 
-
-    .scanner-title {
-        text-align: center;
-        font-size: 26px;
-        font-weight: 700;
-        color: #333;
-        margin-bottom: 10px;
-    }
-
-    .scanner-subtitle {
-        text-align: center;
-        font-size: 16px;
-        color: #666;
+    /* Center container similar to SiteLock hero area */
+    .sitelock-scan-wrapper {
+        width: 100%;
+        display: flex;
+        justify-content: center;
+        margin-top: 15px;
         margin-bottom: 25px;
     }
 
-    .scan-input-box {
-        width: 100%;
-        padding: 18px 20px;
+    .sitelock-scan-bar {
+        width: 600px;
+        max-width: 90%;
+        display: flex;
+        align-items: center;
+    }
+
+    /* Input style identical to SiteLock */
+    .sitelock-input {
+        flex: 1;
+        padding: 16px 18px;
         font-size: 18px;
-        border: 1.5px solid #cbd5e1;
-        border-radius: 8px;
+        border: 1px solid #cbd5e1;
+        border-right: none;
+        border-radius: 6px 0 0 6px;
+        background: #ffffff;
         outline: none;
     }
 
-    .scan-btn {
-        width: 100%;
-        padding: 16px;
-        font-size: 19px;
-        font-weight: 600;
-        background: #00897B;
+    .sitelock-input::placeholder {
+        color: #9ca3af;
+        font-size: 17px;
+    }
+
+    /* SCAN BUTTON — same color & shape as SiteLock */
+    .sitelock-btn {
+        background: #1C89C9;
         color: white;
+        padding: 16px 28px;
+        font-size: 17px;
+        font-weight: 700;
         border: none;
-        border-radius: 8px;
+        border-radius: 0 6px 6px 0;
         cursor: pointer;
-        margin-top: 15px;
+        white-space: nowrap;
     }
-    .scan-btn:hover {
-        background: #006F63;
+
+    .sitelock-btn:hover {
+        background: #166d9c;
     }
+
     </style>
     """, unsafe_allow_html=True)
 
-    # ------------------- UI Card -------------------
-    st.markdown("<div class='scanner-container'>", unsafe_allow_html=True)
+    # ---------- HTML Scanner Bar (looks exactly like SiteLock) ----------
+    st.markdown("""
+    <div class="sitelock-scan-wrapper">
+        <div class="sitelock-scan-bar">
+            <input id="fs_input" class="sitelock-input" placeholder="Enter your website domain"/>
+            <button class="sitelock-btn" onclick="sendToStreamlit()">SCAN NOW</button>
+        </div>
+    </div>
 
-    st.markdown("<div class='scanner-title'>Free Website Risk Scan</div>", unsafe_allow_html=True)
-    st.markdown("<div class='scanner-subtitle'>Check your website for security risks, fraud indicators, blacklisting, and safety issues.</div>", unsafe_allow_html=True)
+    <script>
+    function sendToStreamlit() {
+        const inputValue = document.getElementById("fs_input").value;
+        const streamlitInput = window.parent.document.querySelector('input[data-testid="stTextInput"]');
+        streamlitInput.value = inputValue;
+        streamlitInput.dispatchEvent(new Event("input", { bubbles: true }));
+        const scanButton = window.parent.document.querySelector('button[kind="primary"]');
+        if (scanButton) scanButton.click();
+    }
+    </script>
+    """, unsafe_allow_html=True)
 
-    # Input + button
-    url = st.text_input(
-        "",
-        placeholder="Enter your website URL (e.g., example.com)",
-        key="scanner_url",
-        label_visibility="collapsed"
-    )
+    # Hidden Streamlit input to capture JS value
+    url = st.text_input("Website URL", "", key="scanner_url", label_visibility="collapsed")
 
-    scan_clicked = st.button("Scan Website", key="scan_button")
+    scan_clicked = st.button("SCAN NOW", key="scan_button")
 
-    st.markdown("</div>", unsafe_allow_html=True)
-
-
-    # Scan history
-    st.markdown("<div class='fs-card'>", unsafe_allow_html=True)
-    st.markdown("<div class='section-header section-grey'>📁 Recent Scan History</div>", unsafe_allow_html=True)
-
-    if "history" in st.session_state and len(st.session_state["history"]) > 0:
-        st.dataframe(pd.DataFrame(st.session_state["history"]), use_container_width=True)
-    else:
-        st.write("No scans performed yet.")
-
-    st.markdown("</div>", unsafe_allow_html=True)
 
 # =========================================================
 # 2️⃣ MODEL INTELLIGENCE TAB
@@ -610,5 +618,6 @@ st.markdown(
     "<p class='fs-footer'>FraudShield — Professional Real-Time Website Risk Evaluation</p>",
     unsafe_allow_html=True,
 )
+
 
 
