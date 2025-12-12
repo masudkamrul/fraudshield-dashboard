@@ -379,46 +379,59 @@ with tab_model:
 
     st.write(
         """
-FraudShield uses a compact but carefully designed machine-learning model
-combined with rules, to convert security and trust signals into an interpretable
-website risk score between 0 and 100.
+FraudShield uses a compact but carefully designed machine-learning model,
+combined with deterministic safety rules, to convert security and trust signals
+into an interpretable website risk score.
         """
     )
 
+    # -----------------------------------------------------
+    # PERFORMANCE METRICS (EXECUTIVE VIEW)
+    # -----------------------------------------------------
     col1, col2, col3 = st.columns(3)
     col1.metric("Model Accuracy", "95%")
     col2.metric("AUC Score", "0.805")
     col3.metric("F1 Score", "0.91")
 
+    st.markdown(
+        """
+These metrics reflect balanced performance across detection accuracy,
+false-positive control, and robustness when evaluating diverse websites.
+        """
+    )
+
     st.markdown("---")
 
-    st.markdown("### Model Input Signals")
+    # -----------------------------------------------------
+    # MODEL INPUT SIGNALS
+    # -----------------------------------------------------
+    st.markdown("### 🔍 Model Input Signals")
 
     model_inputs = pd.DataFrame(
         [
             {
                 "Input Feature": "Domain Age (days)",
-                "Description": "Number of days since the domain was registered. New domains often correlate with scams.",
+                "Description": "Newly registered domains are statistically more likely to be associated with fraud and scam activity.",
             },
             {
                 "Input Feature": "HTTPS Flag",
-                "Description": "Whether the website enforces HTTPS. Lack of HTTPS is a strong negative trust signal.",
+                "Description": "Websites without HTTPS expose users to interception and are a common indicator of low trust.",
             },
             {
                 "Input Feature": "HSTS Indicator",
-                "Description": "Presence of HTTP Strict Transport Security header/meta, indicating stronger transport security.",
+                "Description": "HTTP Strict Transport Security indicates enforcement of secure transport mechanisms.",
             },
             {
                 "Input Feature": "CSP Indicator",
-                "Description": "Presence of a Content Security Policy, helping prevent script injection and content abuse.",
+                "Description": "Content Security Policy helps prevent malicious script injection and content abuse.",
             },
             {
                 "Input Feature": "Mixed Content Ratio",
-                "Description": "Whether secure pages still load insecure HTTP resources.",
+                "Description": "Loading insecure resources on secure pages increases exploitation risk.",
             },
             {
-                "Input Feature": "Safe Browsing Blacklist Flag",
-                "Description": "Whether Google Safe Browsing or a similar list has flagged the site as phishing/malware.",
+                "Input Feature": "Threat Intelligence Flag",
+                "Description": "Signals from known phishing or malware blacklists override probabilistic scoring.",
             },
         ]
     )
@@ -426,45 +439,60 @@ website risk score between 0 and 100.
     st.table(model_inputs)
 
     st.markdown("---")
-    st.markdown("### Internal Feature Vector (Illustrative Code)")
+
+    # -----------------------------------------------------
+    # FEATURE ENGINEERING (ILLUSTRATIVE)
+    # -----------------------------------------------------
+    st.markdown("### 🧩 Feature Engineering (Illustrative)")
+
+    st.write(
+        """
+Before inference, raw website signals are normalized and assembled into a
+structured feature vector to ensure consistent and stable scoring behavior.
+        """
+    )
 
     st.code(
         """
-# Example of how internal features are prepared before scoring
+# Example of internal feature preparation
 features = [
-    domain_age_days,   # e.g., 184
-    https_flag,        # 1 if HTTPS is enabled, otherwise 0
-    hsts_flag,         # 1 if HSTS header/meta detected
-    csp_flag,          # 1 if CSP header/meta detected
-    mixed_content_ratio  # value between 0 and 1
+    domain_age_days,        # Integer (e.g., 184)
+    https_flag,             # 1 if HTTPS enabled, else 0
+    hsts_flag,              # 1 if HSTS detected
+    csp_flag,               # 1 if CSP detected
+    mixed_content_ratio     # Float between 0 and 1
 ]
         """,
         language="python",
     )
 
-    st.markdown("### Model Probability Computation (Illustrative)")
+    st.markdown("### 📈 Probability Estimation")
 
     st.code(
         """
-# ML model predicts probability of fraud-like behavior
-proba = model.predict_proba([features])[0][1]  # fraud-likelihood
+# Machine-learning model outputs probability of fraud-like behavior
+proba = model.predict_proba([features])[0][1]
 
-# Convert to 0–100 scale
+# Convert probability to 0–100 risk scale
 raw_score = proba * 100.0
         """,
         language="python",
     )
 
     st.markdown("---")
-    st.markdown("### Feature Importance (Illustrative)")
+
+    # -----------------------------------------------------
+    # FEATURE IMPORTANCE (INTERPRETABILITY)
+    # -----------------------------------------------------
+    st.markdown("### 📊 Feature Importance (Illustrative)")
 
     feature_data = pd.DataFrame(
         {
             "Feature": [
                 "Domain Age",
                 "HTTPS / SSL",
-                "Threatlist Match",
-                "Security Headers (HSTS/CSP)",
+                "Threat Intelligence Match",
+                "Security Headers (HSTS / CSP)",
                 "Mixed Content",
             ],
             "Importance": [0.32, 0.24, 0.20, 0.16, 0.08],
@@ -473,7 +501,68 @@ raw_score = proba * 100.0
 
     st.bar_chart(feature_data.set_index("Feature"))
 
+    st.markdown(
+        """
+This breakdown illustrates how FraudShield prioritizes **structural trust signals**
+over superficial website content, reducing susceptibility to evasion.
+        """
+    )
+
+    st.markdown("---")
+
+    # -----------------------------------------------------
+    # 🔐 MODEL GOVERNANCE & RELIABILITY (NEW – CRITICAL)
+    # -----------------------------------------------------
+    st.markdown("### 🔐 Model Governance & Reliability")
+
+    st.write(
+        """
+FraudShield is designed for real-world deployment, with governance mechanisms
+that ensure reliability, transparency, and safety over time.
+        """
+    )
+
+    governance_df = pd.DataFrame(
+        [
+            {
+                "Governance Aspect": "Explainability",
+                "Implementation": "Rule-based calibration layered on top of ML probabilities",
+            },
+            {
+                "Governance Aspect": "Bias Mitigation",
+                "Implementation": "Model evaluates website-level signals only; no user attributes involved",
+            },
+            {
+                "Governance Aspect": "False-Negative Protection",
+                "Implementation": "Blacklist and threat-intelligence flags override ML output",
+            },
+            {
+                "Governance Aspect": "Model Drift Awareness",
+                "Implementation": "Designed to incorporate retraining as new fraud patterns emerge",
+            },
+            {
+                "Governance Aspect": "Operational Safety",
+                "Implementation": "Intermediate risk tiers enable manual review or policy escalation",
+            },
+        ]
+    )
+
+    st.table(governance_df)
+
+    st.markdown(
+        """
+These safeguards make FraudShield suitable for deployment in consumer-facing
+platforms, enterprise systems, and regulated environments.
+        """
+    )
+
     st.markdown("</div>", unsafe_allow_html=True)
+
+
+
+
+
+
 
 # =========================================================
 # 3️⃣ API EXPLORER TAB
@@ -751,6 +840,7 @@ st.markdown(
     "<p class='fs-footer'>FraudShield — Professional Real-Time Website Risk Evaluation</p>",
     unsafe_allow_html=True,
 )
+
 
 
 
