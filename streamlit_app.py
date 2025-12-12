@@ -153,125 +153,79 @@ tab_scanner, tab_model, tab_api, tab_threats, tab_arch, tab_logic = st.tabs(
 # 1️⃣ SCANNER TAB
 # =========================================================
 with tab_scanner:
-    st.markdown("<div class='fs-card'>", unsafe_allow_html=True)
-    st.markdown("<div class='section-header section-blue'>🔍 Website Risk Scanner</div>", unsafe_allow_html=True)
+    st.markdown("""
+    <style>
+    .scanner-container {
+        max-width: 900px;
+        margin: auto;
+        background: white;
+        padding: 40px 45px;
+        border-radius: 12px;
+        box-shadow: 0 8px 20px rgba(0,0,0,0.06);
+        margin-top: 25px;
+        margin-bottom: 35px;
+    }
 
-    st.write("Enter any website URL below to see its FraudShield risk classification and score.")
+    .scanner-title {
+        text-align: center;
+        font-size: 26px;
+        font-weight: 700;
+        color: #333;
+        margin-bottom: 10px;
+    }
 
+    .scanner-subtitle {
+        text-align: center;
+        font-size: 16px;
+        color: #666;
+        margin-bottom: 25px;
+    }
+
+    .scan-input-box {
+        width: 100%;
+        padding: 18px 20px;
+        font-size: 18px;
+        border: 1.5px solid #cbd5e1;
+        border-radius: 8px;
+        outline: none;
+    }
+
+    .scan-btn {
+        width: 100%;
+        padding: 16px;
+        font-size: 19px;
+        font-weight: 600;
+        background: #00897B;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        margin-top: 15px;
+    }
+    .scan-btn:hover {
+        background: #006F63;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+
+    # ------------------- UI Card -------------------
+    st.markdown("<div class='scanner-container'>", unsafe_allow_html=True)
+
+    st.markdown("<div class='scanner-title'>Free Website Risk Scan</div>", unsafe_allow_html=True)
+    st.markdown("<div class='scanner-subtitle'>Check your website for security risks, fraud indicators, blacklisting, and safety issues.</div>", unsafe_allow_html=True)
+
+    # Input + button
     url = st.text_input(
         "",
-        placeholder="Enter website URL (e.g., https://example.com)",
+        placeholder="Enter your website URL (e.g., example.com)",
         key="scanner_url",
+        label_visibility="collapsed"
     )
 
-    st.markdown(
-        """
-        <div class="info-box">
-        Tip: This scanner uses the same backend engine as the FraudShield browser extension and API.
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
-
-    scan_result = None
-
-    if st.button("Run Scan", use_container_width=True, key="scan_button"):
-        if not url.strip():
-            st.error("Please provide a valid URL before scanning.")
-        else:
-            with st.spinner("Analyzing website…"):
-                scan_result = run_fraudshield_scan(url)
-
-            if not scan_result:
-                st.error("Unable to connect to FraudShield API.")
-            else:
-                risk_class = scan_result.get("risk_class", "Unknown")
-                risk_score = float(scan_result.get("risk_score", 0))
-                blacklist_flag = scan_result.get("blacklist_flag", 0)
-
-                display_label, badge_color = map_risk_style(risk_class, blacklist_flag)
-
-                # RESULT BLOCK
-                st.markdown("<div class='fs-card'>", unsafe_allow_html=True)
-
-                # Centered badge
-                st.markdown(
-                    f"""
-                    <div style="text-align:center; margin-bottom:8px;">
-                        <span style="
-                            background:{badge_color};
-                            color:white;
-                            padding:10px 22px;
-                            border-radius:18px;
-                            font-size:20px;
-                            font-weight:600;
-                            display:inline-block;">
-                            {display_label}
-                        </span>
-                    </div>
-                    """,
-                    unsafe_allow_html=True,
-                )
-
-                # Gauge
-                fig = go.Figure(
-                    go.Indicator(
-                        mode="gauge+number",
-                        value=risk_score,
-                        gauge={
-                            "axis": {"range": [0, 100]},
-                            "bar": {"color": "black"},
-                            "steps": [
-                                {"range": [0, 40], "color": "#d4f6e4"},
-                                {"range": [40, 70], "color": "#fff3cd"},
-                                {"range": [70, 100], "color": "#f8d7da"},
-                            ],
-                        },
-                        number={"font": {"size": 40}},
-                        title={"text": ""},
-                    )
-                )
-                st.plotly_chart(fig, use_container_width=False)
-
-                # Summary
-                st.markdown(
-                    f"""
-                    **Summary**
-
-                    - Website: **{url}**  
-                    - Classification: **{display_label}**  
-                    - Risk Score: **{risk_score:.1f} / 100**  
-                    """,
-                    unsafe_allow_html=True,
-                )
-
-                # Key indicators (high-level)
-                st.markdown(
-                    """
-                    **Key signals used in this evaluation include:**
-                    - Domain age and trust history  
-                    - HTTPS / SSL configuration  
-                    - Security headers (HSTS, CSP)  
-                    - Google Safe Browsing blacklist checks  
-                    - Mixed-content and metadata indicators  
-                    """
-                )
-
-                # Log for history
-                update_log(st.session_state, url, risk_class)
-
-                # PDF report
-                pdf_bytes = generate_pdf_report(url, risk_class, risk_score)
-                st.download_button(
-                    "📄 Download PDF Report",
-                    pdf_bytes,
-                    "fraudshield_report.pdf",
-                    mime="application/pdf",
-                )
-
-                st.markdown("</div>", unsafe_allow_html=True)
+    scan_clicked = st.button("Scan Website", key="scan_button")
 
     st.markdown("</div>", unsafe_allow_html=True)
+
 
     # Scan history
     st.markdown("<div class='fs-card'>", unsafe_allow_html=True)
@@ -665,3 +619,4 @@ st.markdown(
     "<p class='fs-footer'>FraudShield — Professional Real-Time Website Risk Evaluation</p>",
     unsafe_allow_html=True,
 )
+
