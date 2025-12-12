@@ -156,24 +156,24 @@ tab_scanner, tab_model, tab_api, tab_threats, tab_arch, tab_logic = st.tabs(
 
 
 # =========================================================
-# 1️⃣ SCANNER TAB — INPUT INSIDE BLUE HERO
+# 1️⃣ SCANNER TAB — STREAMLIT-CORRECT HERO SCANNER
 # =========================================================
 with tab_scanner:
 
-    # ---------------- CSS ----------------
+    # ---------------- HERO BACKGROUND ----------------
     st.markdown(
         """
         <style>
         .fs-hero {
             background: linear-gradient(90deg, #1F4E79, #1C6FB5);
-            padding: 60px 40px 70px 40px;
+            padding: 70px 40px 120px 40px;
             border-radius: 10px;
             text-align: center;
-            margin-bottom: 40px;
+            margin-bottom: -70px; /* pull scanner upward */
         }
 
         .fs-hero-title {
-            color: #ffffff;
+            color: white;
             font-size: 36px;
             font-weight: 700;
             margin-bottom: 8px;
@@ -182,27 +182,32 @@ with tab_scanner:
         .fs-hero-subtitle {
             color: #e2e8f0;
             font-size: 17px;
-            margin-bottom: 30px;
         }
 
-        /* Center scanner row inside hero */
-        .fs-scan-row {
+        /* Scanner container overlay */
+        .fs-scanner-overlay {
             max-width: 760px;
             margin: 0 auto;
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+            position: relative;
+            z-index: 10;
         }
 
-        /* Input style */
+        /* Input styling */
         div[data-testid="stTextInput"] input {
             font-size: 18px;
-            padding: 16px 18px;
-            height: 54px;
+            height: 56px;
+            padding: 14px 18px;
             border-radius: 6px 0 0 6px;
-            border: none;
+            border: 1px solid #cbd5e1;
         }
 
-        /* Button style */
+        /* Button styling */
         div[data-testid="stButton"] > button {
-            height: 54px;
+            height: 56px;
             font-size: 17px;
             font-weight: 700;
             border-radius: 0 6px 6px 0;
@@ -216,13 +221,12 @@ with tab_scanner:
             background-color: #166d9c;
         }
 
-        /* Result card */
         .fs-card {
             background: #ffffff;
             padding: 22px;
             border-radius: 10px;
             border: 1px solid #e2e6ea;
-            margin-top: 20px;
+            margin-top: 24px;
             box-shadow: 0 2px 5px rgba(15,23,42,0.03);
         }
         </style>
@@ -230,7 +234,7 @@ with tab_scanner:
         unsafe_allow_html=True,
     )
 
-    # ---------------- HERO START ----------------
+    # ---------------- HERO CONTENT ----------------
     st.markdown(
         """
         <div class="fs-hero">
@@ -238,12 +242,14 @@ with tab_scanner:
             <div class="fs-hero-subtitle">
                 Enter a website to check for vulnerabilities, fraud signals, and security issues.
             </div>
+        </div>
         """,
         unsafe_allow_html=True,
     )
 
-    # -------- Scanner row INSIDE hero --------
-    st.markdown('<div class="fs-scan-row">', unsafe_allow_html=True)
+    # ---------------- SCANNER OVERLAY ----------------
+    st.markdown('<div class="fs-scanner-overlay">', unsafe_allow_html=True)
+
     col_input, col_button = st.columns([6, 1])
 
     with col_input:
@@ -256,8 +262,7 @@ with tab_scanner:
     with col_button:
         scan_clicked = st.button("SCAN NOW")
 
-    st.markdown("</div></div>", unsafe_allow_html=True)
-    # ---------------- HERO END ----------------
+    st.markdown("</div>", unsafe_allow_html=True)
 
     # ---------------- PROCESS SCAN ----------------
     if scan_clicked:
@@ -270,7 +275,62 @@ with tab_scanner:
             if not scan_result:
                 st.error("Unable to connect to FraudShield API.")
             else:
-                r
+                risk_class = scan_result.get("risk_class", "Unknown")
+                risk_score = float(scan_result.get("risk_score", 0))
+                blacklist_flag = scan_result.get("blacklist_flag", 0)
+
+                display_label, badge_color = map_risk_style(risk_class, blacklist_flag)
+
+                st.markdown('<div class="fs-card">', unsafe_allow_html=True)
+
+                st.markdown(
+                    f"""
+                    <div style="text-align:center; margin-bottom:10px;">
+                        <span style="
+                            background:{badge_color};
+                            color:white;
+                            padding:10px 22px;
+                            border-radius:18px;
+                            font-size:20px;
+                            font-weight:600;">
+                            {display_label}
+                        </span>
+                    </div>
+                    """,
+                    unsafe_allow_html=True,
+                )
+
+                fig = go.Figure(
+                    go.Indicator(
+                        mode="gauge+number",
+                        value=risk_score,
+                        gauge={
+                            "axis": {"range": [0, 100]},
+                            "bar": {"color": "black"},
+                            "steps": [
+                                {"range": [0, 40], "color": "#d4f6e4"},
+                                {"range": [40, 70], "color": "#fff3cd"},
+                                {"range": [70, 100], "color": "#f8d7da"},
+                            ],
+                        },
+                        number={"font": {"size": 40}},
+                    )
+                )
+                st.plotly_chart(fig, use_container_width=True)
+
+                st.markdown(
+                    f"""
+                    **Summary**
+
+                    - Website: **{url}**  
+                    - Classification: **{display_label}**  
+                    - Risk Score: **{risk_score:.1f} / 100**  
+                    """,
+                    unsafe_allow_html=True,
+                )
+
+                st.markdown("</div>", unsafe_allow_html=True)
+
 
 
 
@@ -671,6 +731,7 @@ st.markdown(
     "<p class='fs-footer'>FraudShield — Professional Real-Time Website Risk Evaluation</p>",
     unsafe_allow_html=True,
 )
+
 
 
 
