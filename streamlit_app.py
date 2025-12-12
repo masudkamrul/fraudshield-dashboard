@@ -151,24 +151,22 @@ tab_scanner, tab_model, tab_api, tab_threats, tab_arch, tab_logic = st.tabs(
 
 
 # =========================================================
-# 1️⃣ SCANNER TAB — SITELOCK PREMIUM HERO VERSION
+# 1️⃣ SCANNER TAB — FIXED HERO SECTION (HTML NOW RENDERS)
 # =========================================================
 with tab_scanner:
 
-    # ===== STYLE FOR HERO SECTION =====
+    # HERO CSS
     st.markdown("""
     <style>
 
-    /* ------------------------
-       HERO BACKGROUND SECTION
-    -------------------------*/
+    /* HERO BACKGROUND */
     .hero-section {
         width: 100%;
-        background: linear-gradient(90deg, #1C4E80, #2468A0);
+        background: linear-gradient(90deg, #1F4E79, #1C6FB5);
         padding: 70px 20px 80px 20px;
         text-align: center;
         border-radius: 10px;
-        margin-bottom: 30px;
+        margin-bottom: 40px;
     }
 
     .hero-title {
@@ -226,7 +224,7 @@ with tab_scanner:
         background: #166d9c;
     }
 
-    /* Hide internal Streamlit elements */
+    /* Hide Streamlit's auto-rendered input + button */
     div[data-testid="stTextInput"] { display: none !important; }
     button[data-scan="hidden"] { display: none !important; }
 
@@ -234,12 +232,11 @@ with tab_scanner:
     """, unsafe_allow_html=True)
 
 
-
-    # ===== HERO HTML BLOCK =====
+    # ================= HERO HTML ====================
     st.markdown("""
     <div class="hero-section">
         <div class="hero-title">Free Website Malware & Security Scanner</div>
-        <div class="hero-subtitle">Enter a website to check for security issues, vulnerabilities, and fraud indicators.</div>
+        <div class="hero-subtitle">Enter a website to check for vulnerabilities, fraud signals, and security issues.</div>
 
         <div class="scan-container">
             <div class="scan-box">
@@ -264,14 +261,13 @@ with tab_scanner:
     """, unsafe_allow_html=True)
 
 
-
-    # ===== HIDDEN STREAMLIT FORM (backend trigger) =====
+    # ============= HIDDEN STREAMLIT FORM (backend handler) =============
     with st.form("fraudshield_hidden_form"):
         hidden_url = st.text_input("", key="fs_hidden_url", label_visibility="collapsed")
         run_scan = st.form_submit_button("SCAN NOW", kwargs={"data-scan": "hidden"})
 
 
-    # ===== RUN THE SCAN + DISPLAY RESULTS =====
+    # ============= EXECUTE SCAN + SHOW RESULTS =============
     if run_scan:
         if not hidden_url.strip():
             st.error("Please enter a valid URL.")
@@ -288,7 +284,7 @@ with tab_scanner:
 
                 label, color = map_risk_style(risk_class, blacklist_flag)
 
-                # ------- Badge -------
+                # Badge
                 st.markdown(
                     f"""
                     <div style="text-align:center;margin-top:25px;">
@@ -306,7 +302,7 @@ with tab_scanner:
                     unsafe_allow_html=True
                 )
 
-                # ------- Gauge -------
+                # Gauge
                 fig = go.Figure(
                     go.Indicator(
                         mode="gauge+number",
@@ -325,9 +321,10 @@ with tab_scanner:
                 )
                 st.plotly_chart(fig, use_container_width=True)
 
-                # ------- Summary -------
+                # Summary
                 st.success(f"Risk Score: **{risk_score} / 100** — {label}")
                 st.write(f"Scanned Website: **{hidden_url}**")
+
 
 
 
@@ -720,4 +717,5 @@ st.markdown(
     "<p class='fs-footer'>FraudShield — Professional Real-Time Website Risk Evaluation</p>",
     unsafe_allow_html=True,
 )
+
 
