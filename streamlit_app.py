@@ -116,6 +116,16 @@ st.markdown(
         margin: 0 auto;
     }
 
+    /* =====================================================
+       ✅ FIX CONTENT ALIGNMENT AFTER CENTERED TABS
+       ===================================================== */
+    
+    /* Center the main block container */
+    section.main > div {
+        max-width: 1400px;
+        margin-left: auto;
+        margin-right: auto;
+    }
 
 
 
@@ -1875,6 +1885,7 @@ st.markdown(
     "<p class='fs-footer'>FraudShield — Professional Real-Time Website Risk Evaluation</p>",
     unsafe_allow_html=True,
 )
+
 
 
 
