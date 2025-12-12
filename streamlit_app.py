@@ -155,16 +155,7 @@ tab_scanner, tab_model, tab_api, tab_threats, tab_arch, tab_logic = st.tabs(
 with tab_scanner:
     st.markdown("""
     <style>
-    .scanner-container {
-        max-width: 900px;
-        margin: auto;
-        background: white;
-        padding: 40px 45px;
-        border-radius: 12px;
-        box-shadow: 0 8px 20px rgba(0,0,0,0.06);
-        margin-top: 25px;
-        margin-bottom: 35px;
-    }
+
 
     .scanner-title {
         text-align: center;
@@ -619,4 +610,5 @@ st.markdown(
     "<p class='fs-footer'>FraudShield — Professional Real-Time Website Risk Evaluation</p>",
     unsafe_allow_html=True,
 )
+
 
