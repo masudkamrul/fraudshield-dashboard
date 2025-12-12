@@ -206,7 +206,7 @@ import streamlit.components.v1 as components
 import plotly.graph_objects as go
 
 with tab_scanner:
-st.session_state.active_tab = "Scanner"
+    st.session_state.active_tab = "Scanner"
 
     hero_html = """
     <style>
@@ -1099,7 +1099,7 @@ normally use the platform.
 # 4️⃣ THREAT CATEGORIES TAB (UPGRADED: PLATFORM SAFETY TAXONOMY)
 # =========================================================
 with tab_threats:
-st.session_state.active_tab = "Threat Categories"
+    st.session_state.active_tab = "Threat Categories"
     st.markdown("<div class='fs-card'>", unsafe_allow_html=True)
     st.markdown("<div class='section-header section-orange'>⚠️ Threat Categories</div>", unsafe_allow_html=True)
 
@@ -1896,6 +1896,7 @@ st.markdown(
     "<p class='fs-footer'>FraudShield — Professional Real-Time Website Risk Evaluation</p>",
     unsafe_allow_html=True,
 )
+
 
 
 
