@@ -712,63 +712,342 @@ Key distinguishing characteristics include:
 
 
 
+
+
+
 # =========================================================
 # 3️⃣ API EXPLORER TAB
+# =========================================================
+# =========================================================
+# 3️⃣ API EXPLORER TAB (UPGRADED FOR ENTERPRISE DEMO)
 # =========================================================
 with tab_api:
     st.markdown("<div class='fs-card'>", unsafe_allow_html=True)
     st.markdown("<div class='section-header section-blue'>🔌 API Explorer</div>", unsafe_allow_html=True)
 
     st.write(
-        "This section shows how external platforms like FindMe can directly query the FraudShield API."
+        """
+This section demonstrates how external platforms (e.g., FindMe LLC) can integrate FraudShield
+as a lightweight safety layer for outbound links. It includes live testing, response inspection,
+latency visibility, and batch-evaluation workflows that mirror real platform needs.
+        """
     )
 
-    api_url = st.text_input(
-        "URL to test via API",
-        placeholder="https://example.com",
-        key="api_url_input"
+    # -----------------------------------------------------
+    # API CONFIG (CENTRALIZED)
+    # -----------------------------------------------------
+    API_ENDPOINT = "https://website-risk-scorer-api.onrender.com/scan_url"
+
+    st.markdown("### ✅ API Endpoint")
+    st.code(API_ENDPOINT)
+
+    st.markdown(
+        """
+<div class="info-box">
+<strong>Typical integration goal:</strong> When a user posts or clicks an outbound link, the platform calls the API
+to get a risk score & classification. This enables warnings, moderation flags, or safer navigation experiences.
+</div>
+        """,
+        unsafe_allow_html=True
     )
-
-    if st.button("Call API", key="api_call_button"):
-        with st.spinner("Calling FraudShield API…"):
-            api_result = run_fraudshield_scan(api_url)
-
-        if not api_result:
-            st.error("API call failed. Please verify the backend is reachable.")
-        else:
-            st.write("**Raw API Response:**")
-            st.json(api_result)
 
     st.markdown("---")
 
-    st.markdown("### Python Integration Example")
+    # -----------------------------------------------------
+    # LIVE SINGLE URL TEST + LATENCY
+    # -----------------------------------------------------
+    st.markdown("### 🧪 Live API Test (Single URL)")
+
+    colA, colB = st.columns([3, 1])
+    with colA:
+        api_url = st.text_input(
+            "Website URL to test",
+            placeholder="https://example.com",
+            key="api_url_input"
+        )
+    with colB:
+        st.write("")
+        st.write("")
+        run_live = st.button("Call API", key="api_call_button", use_container_width=True)
+
+    if run_live:
+        if not api_url.strip():
+            st.error("Please enter a valid URL.")
+        else:
+            import time
+            start = time.time()
+            with st.spinner("Calling FraudShield API…"):
+                api_result = run_fraudshield_scan(api_url)
+            elapsed_ms = (time.time() - start) * 1000.0
+
+            if not api_result:
+                st.error("API call failed. Please verify the backend is reachable.")
+            else:
+                # Basic extract for display
+                risk_class = api_result.get("risk_class", "Unknown")
+                risk_score = float(api_result.get("risk_score", 0))
+                blacklist_flag = api_result.get("blacklist_flag", 0)
+
+                label, color = map_risk_style(risk_class, blacklist_flag)
+
+                # Summary card
+                st.markdown(
+                    f"""
+<div style="
+    border:1px solid #e2e6ea;
+    border-left:6px solid {color};
+    border-radius:10px;
+    padding:14px 16px;
+    background:#ffffff;
+    margin-top:10px;">
+    <div style="font-size:16px; font-weight:700; margin-bottom:6px;">API Result Summary</div>
+    <div style="font-size:14px;">
+        <strong>URL:</strong> {api_url}<br>
+        <strong>Classification:</strong> <span style="color:{color}; font-weight:700;">{label}</span><br>
+        <strong>Risk Score:</strong> <span style="font-weight:700;">{risk_score:.2f}%</span><br>
+        <strong>Latency:</strong> {elapsed_ms:.0f} ms
+    </div>
+</div>
+                    """,
+                    unsafe_allow_html=True
+                )
+
+                st.markdown("#### Raw API Response (JSON)")
+                st.json(api_result)
+
+    st.markdown("---")
+
+    # -----------------------------------------------------
+    # RESPONSE CONTRACT (SCHEMA)
+    # -----------------------------------------------------
+    st.markdown("### 📄 API Response Contract (What Integrators Can Rely On)")
+
+    st.write(
+        """
+Below is an example response structure to help platform teams implement stable parsing and UI logic.
+(Fields may expand over time, but core fields should remain consistent.)
+        """
+    )
 
     st.code(
         """
+{
+  "url": "https://example.com",
+  "risk_class": "Low Risk",
+  "risk_score": 32.50,
+  "blacklist_flag": 0,
+  "signals": {
+      "domain_age_days": 1840,
+      "https_flag": 1,
+      "hsts_flag": 1,
+      "csp_flag": 1,
+      "mixed_content_ratio": 0.00
+  }
+}
+        """,
+        language="json"
+    )
+
+    st.markdown("---")
+
+    # -----------------------------------------------------
+    # INTEGRATION PATTERNS (REAL PLATFORM USE)
+    # -----------------------------------------------------
+    st.markdown("### 🧩 Real-World Integration Patterns (Platform Examples)")
+
+    patterns = pd.DataFrame(
+        [
+            {
+                "Pattern": "Outbound Link Pre-Click Check",
+                "What Happens": "User clicks a link → platform calls API → show warning screen if risky",
+                "Why It Helps": "Prevents harm before users enter unknown websites",
+            },
+            {
+                "Pattern": "Profile Link Safety Badge",
+                "What Happens": "On profile pages, show Safe/Low/Suspicious badges next to external links",
+                "Why It Helps": "Builds trust + transparency for viewers and customers",
+            },
+            {
+                "Pattern": "Content Moderation Queue",
+                "What Happens": "If risk ≥ threshold, automatically flag link for manual review",
+                "Why It Helps": "Reduces platform abuse and protects brand reputation",
+            },
+            {
+                "Pattern": "Background Batch Verification",
+                "What Happens": "Nightly scan of newly added/updated links and store outcomes",
+                "Why It Helps": "Scales safety without adding friction in user workflows",
+            },
+        ]
+    )
+
+    st.table(patterns)
+
+    st.markdown("---")
+
+    # -----------------------------------------------------
+    # BATCH SCAN DEMO (VERY USEFUL FOR FINDME)
+    # -----------------------------------------------------
+    st.markdown("### 📦 Batch Scan Demo (FindMe-Style Workflow)")
+
+    st.write(
+        """
+Paste multiple URLs (one per line) to simulate scanning outbound links across profiles or posts.
+This mirrors real platform needs such as scanning user-submitted links in bulk.
+        """
+    )
+
+    batch_text = st.text_area(
+        "Paste URLs (one per line)",
+        placeholder="https://example.com\nhttps://another-site.com\nhttps://shop.example.org",
+        height=140,
+        key="batch_urls"
+    )
+
+    col1, col2 = st.columns([1, 2])
+    with col1:
+        run_batch = st.button("Run Batch Scan", use_container_width=True, key="run_batch_scan")
+    with col2:
+        st.caption("Tip: This is useful to validate behavior across multiple real-world websites quickly.")
+
+    if run_batch:
+        urls = [u.strip() for u in batch_text.splitlines() if u.strip()]
+        if len(urls) == 0:
+            st.error("Please paste at least one URL.")
+        else:
+            rows = []
+            with st.spinner(f"Scanning {len(urls)} URLs…"):
+                import time
+                for u in urls[:50]:  # safety cap for demos
+                    t0 = time.time()
+                    r = run_fraudshield_scan(u)
+                    latency = (time.time() - t0) * 1000.0
+
+                    if not r:
+                        rows.append({"url": u, "risk_class": "API_ERROR", "risk_score": None, "latency_ms": round(latency, 0)})
+                        continue
+
+                    rc = r.get("risk_class", "Unknown")
+                    rs = float(r.get("risk_score", 0))
+                    bl = r.get("blacklist_flag", 0)
+                    label, _ = map_risk_style(rc, bl)
+
+                    rows.append(
+                        {
+                            "url": u,
+                            "risk_class": label,
+                            "risk_score_%": round(rs, 2),
+                            "latency_ms": round(latency, 0),
+                        }
+                    )
+
+            df = pd.DataFrame(rows)
+            st.dataframe(df, use_container_width=True)
+
+            st.download_button(
+                "⬇️ Download Batch Results (CSV)",
+                df.to_csv(index=False).encode("utf-8"),
+                file_name="fraudshield_batch_results.csv",
+                mime="text/csv",
+            )
+
+    st.markdown("---")
+
+    # -----------------------------------------------------
+    # COPY-PASTE SNIPPETS (PYTHON / JS / CURL)
+    # -----------------------------------------------------
+    st.markdown("### 🧾 Copy-Paste Integration Snippets")
+
+    st.markdown("#### Python (Server-side integration)")
+    st.code(
+        f"""
 import requests
 
-API_URL = "https://website-risk-scorer-api.onrender.com/scan_url"
+API_URL = "{API_ENDPOINT}"
 
-payload = {"url": "https://example.com"}
-response = requests.post(API_URL, json=payload)
-print(response.json())
+payload = {{"url": "https://example.com"}}
+res = requests.post(API_URL, json=payload, timeout=15)
+res.raise_for_status()
+data = res.json()
+
+print("risk_class:", data.get("risk_class"))
+print("risk_score:", data.get("risk_score"))
+print("blacklist_flag:", data.get("blacklist_flag"))
         """,
         language="python",
     )
 
-    st.markdown("### cURL Example")
-
+    st.markdown("#### JavaScript (Platform / service integration)")
     st.code(
-        """
-curl -X POST \\
-  https://website-risk-scorer-api.onrender.com/scan_url \\
+        f"""
+async function scanUrl(url) {{
+  const res = await fetch("{API_ENDPOINT}", {{
+    method: "POST",
+    headers: {{ "Content-Type": "application/json" }},
+    body: JSON.stringify({{ url }})
+  }});
+
+  if (!res.ok) throw new Error("API error");
+  const data = await res.json();
+  return data; // {{ risk_class, risk_score, blacklist_flag, ... }}
+}}
+
+scanUrl("https://example.com").then(console.log);
+        """,
+        language="javascript",
+    )
+
+    st.markdown("#### cURL (Quick testing)")
+    st.code(
+        f"""
+curl -X POST "{API_ENDPOINT}" \\
   -H "Content-Type: application/json" \\
-  -d '{"url": "https://example.com"}'
+  -d '{{"url":"https://example.com"}}'
         """,
         language="bash",
     )
 
+    st.markdown("---")
+
+    # -----------------------------------------------------
+    # OPERATIONAL NOTES (PROFESSIONAL)
+    # -----------------------------------------------------
+    st.markdown("### 🛡️ Operational Notes for Production Use")
+
+    ops_df = pd.DataFrame(
+        [
+            {"Best Practice": "Timeouts", "Recommendation": "Use 10–20s client timeout for stability"},
+            {"Best Practice": "Retries", "Recommendation": "Retry once on transient network failures"},
+            {"Best Practice": "Caching", "Recommendation": "Cache results per URL to reduce repeated calls"},
+            {"Best Practice": "Rate Limiting", "Recommendation": "Apply throttling for platform-wide batch jobs"},
+            {"Best Practice": "Threshold Policy", "Recommendation": "Define actions per tier: Safe/Low/Suspicious/High"},
+        ]
+    )
+
+    st.table(ops_df)
+
+    st.markdown(
+        """
+<div class="info-box">
+<strong>Integration-ready takeaway:</strong>
+FraudShield can be used as an on-demand risk oracle for outbound links — enabling warnings,
+badges, moderation workflows, and safer navigation experiences without changing how users
+normally use the platform.
+</div>
+        """,
+        unsafe_allow_html=True
+    )
+
     st.markdown("</div>", unsafe_allow_html=True)
+
+
+
+
+
+
+
+
+
+
 
 # =========================================================
 # 4️⃣ THREAT CATEGORIES TAB
@@ -825,6 +1104,18 @@ understand the nature of the risk.
     st.table(categories)
 
     st.markdown("</div>", unsafe_allow_html=True)
+
+
+
+
+
+
+
+
+
+
+
+
 
 # =========================================================
 # 5️⃣ ARCHITECTURE TAB
@@ -988,6 +1279,7 @@ st.markdown(
     "<p class='fs-footer'>FraudShield — Professional Real-Time Website Risk Evaluation</p>",
     unsafe_allow_html=True,
 )
+
 
 
 
