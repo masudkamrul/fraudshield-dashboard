@@ -154,58 +154,61 @@ tab_scanner, tab_model, tab_api, tab_threats, tab_arch, tab_logic = st.tabs(
 
 
 # =========================================================
-#  TAB SCANNER
+# 1️⃣ SCANNER TAB — FINAL HERO SCANNER (PRODUCTION)
 # =========================================================
+import streamlit as st
+import streamlit.components.v1 as components
+import plotly.graph_objects as go
 
 with tab_scanner:
-    import streamlit.components.v1 as components
 
     hero_html = """
     <style>
         .hero {
-            background: linear-gradient(90deg, #1F4E79, #1C6FB5);
-            padding: 80px 20px 90px;
+            background: linear-gradient(135deg, #0f3c68, #1c6fb5);
+            padding: 80px 20px 90px 20px;
+            border-radius: 14px;
             text-align: center;
-            border-radius: 12px;
         }
 
         .hero h1 {
             color: white;
-            font-size: 38px;
-            margin-bottom: 10px;
+            font-size: 40px;
+            font-weight: 700;
+            margin-bottom: 12px;
         }
 
         .hero p {
-            color: #e2e8f0;
+            color: #dbeafe;
             font-size: 18px;
             margin-bottom: 40px;
         }
 
         .scan-box {
-            display: flex;
             max-width: 720px;
             margin: auto;
             background: white;
-            border-radius: 8px;
+            border-radius: 10px;
+            display: flex;
             overflow: hidden;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.25);
+            box-shadow: 0 12px 30px rgba(0,0,0,0.25);
         }
 
         .scan-box input {
             flex: 1;
-            padding: 18px;
-            font-size: 18px;
             border: none;
+            padding: 20px;
+            font-size: 18px;
             outline: none;
         }
 
         .scan-box button {
-            background: #1C89C9;
+            background: #1c89c9;
             color: white;
-            font-size: 17px;
-            font-weight: bold;
-            padding: 0 30px;
             border: none;
+            padding: 0 34px;
+            font-size: 17px;
+            font-weight: 700;
             cursor: pointer;
         }
 
@@ -214,59 +217,59 @@ with tab_scanner:
         }
 
         .result-box {
-            margin-top: 35px;
-            max-width: 520px;
-            margin-left: auto;
-            margin-right: auto;
-            padding: 20px 22px;
-            border-radius: 12px;
+            margin: 40px auto 0 auto;
+            max-width: 560px;
+            padding: 22px;
+            border-radius: 14px;
             color: white;
             display: none;
             box-shadow: 0 10px 25px rgba(0,0,0,0.25);
             transition: background 0.6s ease;
         }
-        
-        /* Risk background colors */
+
         .bg-safe {
             background: linear-gradient(135deg, #2e7d32, #4caf50);
         }
-        
+
         .bg-low {
             background: linear-gradient(135deg, #f9a825, #fbc02d);
         }
-        
+
         .bg-suspicious {
             background: linear-gradient(135deg, #ef6c00, #ff9800);
         }
-        
+
         .bg-high {
             background: linear-gradient(135deg, #c62828, #f44336);
         }
-        
+
         .bg-blacklisted {
             background: linear-gradient(135deg, #4a0000, #b71c1c);
         }
 
+        .risk-title {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 8px;
         }
 
-        .risk-badge {
-            font-size: 22px;
-            font-weight: 700;
+        .risk-score {
+            font-size: 16px;
             margin-bottom: 12px;
         }
 
-        .progress-bg {
+        .progress {
             width: 100%;
-            background: rgba(255,255,255,0.25);
+            height: 12px;
+            background: rgba(255,255,255,0.35);
             border-radius: 10px;
             overflow: hidden;
-            height: 14px;
-            margin-top: 8px;
         }
 
         .progress-bar {
-            height: 14px;
+            height: 100%;
             width: 0%;
+            background: white;
             transition: width 1s ease;
         }
     </style>
@@ -276,37 +279,39 @@ with tab_scanner:
         <p>Enter a website to check for vulnerabilities, fraud signals, and security issues.</p>
 
         <div class="scan-box">
-            <input id="url" placeholder="Enter your website domain" />
-            <button onclick="scan()">SCAN NOW</button>
+            <input id="scanUrl" placeholder="Enter your website domain (e.g. example.com)">
+            <button onclick="runScan()">SCAN NOW</button>
         </div>
 
-        <div id="resultBox" class="result-box">
-            <div id="riskBadge" class="risk-badge"></div>
-            <div id="scoreText"></div>
-            <div class="progress-bg">
-                <div id="progressBar" class="progress-bar"></div>
+        <div id="result" class="result-box">
+            <div class="risk-title" id="riskLabel"></div>
+            <div class="risk-score" id="riskScore"></div>
+            <div class="progress">
+                <div class="progress-bar" id="riskBar"></div>
             </div>
         </div>
     </div>
 
     <script>
-        function getColor(risk) {
-            if (risk === "Safe") return "#4CAF50";
-            if (risk === "Low Risk") return "#FFC107";
-            if (risk === "Suspicious") return "#FF9800";
-            if (risk === "High Risk") return "#F44336";
-            return "#B71C1C";
+        function getBgClass(risk) {
+            if (risk === "Safe") return "bg-safe";
+            if (risk === "Low Risk") return "bg-low";
+            if (risk === "Suspicious") return "bg-suspicious";
+            if (risk === "High Risk") return "bg-high";
+            return "bg-blacklisted";
         }
 
-        async function scan() {
-            const url = document.getElementById("url").value;
+        async function runScan() {
+            const url = document.getElementById("scanUrl").value;
             if (!url) return;
 
-            const resultBox = document.getElementById("resultBox");
-            resultBox.style.display = "block";
-            document.getElementById("riskBadge").innerText = "Scanning…";
-            document.getElementById("scoreText").innerText = "";
-            document.getElementById("progressBar").style.width = "0%";
+            const box = document.getElementById("result");
+            box.style.display = "block";
+            box.className = "result-box";
+
+            document.getElementById("riskLabel").innerText = "Scanning…";
+            document.getElementById("riskScore").innerText = "";
+            document.getElementById("riskBar").style.width = "0%";
 
             try {
                 const res = await fetch(
@@ -321,28 +326,27 @@ with tab_scanner:
                 const data = await res.json();
 
                 const risk = data.risk_class;
-                const score = Number(data.risk_score).toFixed(2); // %
-                const color = getColor(risk);
+                const score = Number(data.risk_score).toFixed(2);
 
-                document.getElementById("riskBadge").innerText = "Risk: " + risk;
-                document.getElementById("riskBadge").style.color = color;
+                box.classList.add(getBgClass(risk));
 
-                document.getElementById("scoreText").innerHTML =
+                document.getElementById("riskLabel").innerText = "Risk: " + risk;
+                document.getElementById("riskScore").innerHTML =
                     "Risk Score: <strong>" + score + "%</strong>";
 
-                const bar = document.getElementById("progressBar");
-                bar.style.background = color;
-                bar.style.width = score + "%";
+                document.getElementById("riskBar").style.width = score + "%";
 
             } catch (e) {
-                document.getElementById("riskBadge").innerText =
+                box.classList.add("bg-high");
+                document.getElementById("riskLabel").innerText =
                     "Scan failed. Please try again.";
             }
         }
     </script>
     """
 
-    components.html(hero_html, height=520)
+    components.html(hero_html, height=620)
+
 
 
 
@@ -747,6 +751,7 @@ st.markdown(
     "<p class='fs-footer'>FraudShield — Professional Real-Time Website Risk Evaluation</p>",
     unsafe_allow_html=True,
 )
+
 
 
 
