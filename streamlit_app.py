@@ -150,63 +150,81 @@ tab_scanner, tab_model, tab_api, tab_threats, tab_arch, tab_logic = st.tabs(
 )
 
 
+
+
+
+
+
 # =========================================================
-# 1️⃣ SCANNER TAB — FINAL EXACT SITELOCK STYLE (WORKING)
+# 1️⃣ SCANNER TAB — FINAL FIXED HERO SECTION
 # =========================================================
+import streamlit as st
+import streamlit.components.v1 as components
+
 with tab_scanner:
 
-    # -----------------------------------
-    # HERO SCANNER UI (SiteLock Style)
-    # -----------------------------------
-    st.markdown("""
+    # ---------------- HERO + SCANNER HTML ----------------
+    hero_html = """
     <style>
         .hero-section {
-            background: linear-gradient(90deg, #0b4e8a, #145ea8);
-            padding: 60px 20px;
+            width: 100%;
+            background: linear-gradient(90deg, #1F4E79, #1C6FB5);
+            padding: 70px 20px 80px 20px;
             text-align: center;
             border-radius: 10px;
-            color: white;
-            margin-bottom: 35px;
-        }
-        .hero-title {
-            font-size: 36px;
-            font-weight: 700;
-            margin-bottom: 8px;
-        }
-        .hero-subtitle {
-            font-size: 18px;
-            opacity: 0.9;
-            margin-bottom: 28px;
+            margin-bottom: 40px;
         }
 
-        .scan-wrapper {
-            width: 60%;
-            margin: auto;
+        .hero-title {
+            color: white;
+            font-size: 38px;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .hero-subtitle {
+            color: #e2e8f0;
+            font-size: 18px;
+            margin-bottom: 35px;
+        }
+
+        .scan-container {
             display: flex;
-            flex-direction: row;
+            justify-content: center;
+            width: 100%;
+        }
+
+        .scan-box {
+            display: flex;
+            width: 720px;
+            max-width: 95%;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
         }
 
         .scan-input {
             flex: 1;
-            padding: 16px;
+            padding: 18px 20px;
             font-size: 18px;
             border: none;
-            border-radius: 6px 0 0 6px;
             outline: none;
         }
 
         .scan-btn {
-            padding: 16px 30px;
-            font-size: 18px;
-            font-weight: 600;
-            color: white;
-            background: #0284c7;
+            background: #1C89C9;
             border: none;
+            padding: 18px 28px;
+            font-size: 17px;
+            color: white;
+            font-weight: 700;
             cursor: pointer;
-            border-radius: 0 6px 6px 0;
+            white-space: nowrap;
         }
+
         .scan-btn:hover {
-            background: #0369a1;
+            background: #166d9c;
         }
     </style>
 
@@ -216,103 +234,93 @@ with tab_scanner:
             Enter a website to check for vulnerabilities, fraud signals, and security issues.
         </div>
 
-        <div class="scan-wrapper">
-            <input id="fs_url" class="scan-input" placeholder="Enter your website domain">
-            <button class="scan-btn" onclick="submitFraudShieldScan()">SCAN NOW</button>
+        <div class="scan-container">
+            <div class="scan-box">
+                <input type="text" id="fs_url" class="scan-input" placeholder="Enter your website domain">
+                <button class="scan-btn" onclick="submitFraudShieldScan()">SCAN NOW</button>
+            </div>
         </div>
     </div>
 
     <script>
         function submitFraudShieldScan() {
             const url = document.getElementById("fs_url").value;
-            if (!url || url.length < 3) {
-                alert("Please enter a valid website domain.");
-                return;
-            }
-            const doc = window.parent.document;
 
-            // Push value into Streamlit hidden input
-            const hiddenInput = doc.querySelector('input[name="fs_hidden_url"]');
+            const hiddenInput = window.parent.document.querySelector('input[data-testid="stTextInput"]');
             hiddenInput.value = url;
             hiddenInput.dispatchEvent(new Event("input", { bubbles: true }));
 
-            // Trigger hidden Streamlit submit button
-            const btn = doc.querySelector('button[data-scan="hidden-btn"]');
-            btn.click();
+            const hiddenBtn = window.parent.document.querySelector('button[data-scan="hidden"]');
+            hiddenBtn.click();
         }
     </script>
-    """, unsafe_allow_html=True)
+    """
 
-    # -----------------------------------
-    # Hidden Streamlit Form (Required)
-    # -----------------------------------
-    with st.form("fs_hidden_form"):
+    # 🚀 Render HTML correctly (prevents escaping)
+    components.html(hero_html, height=350)
+
+
+    # ---------------- HIDDEN STREAMLIT FORM ----------------
+    with st.form("fraudshield_hidden_form"):
         hidden_url = st.text_input("", key="fs_hidden_url", label_visibility="collapsed")
-        scan_trigger = st.form_submit_button("SCAN", kwargs={"data-scan": "hidden-btn"})
+        run_scan = st.form_submit_button("SCAN NOW", kwargs={"data-scan": "hidden"})
 
-    # -----------------------------------
-    # SCAN PROCESSING
-    # -----------------------------------
-    if scan_trigger and hidden_url.strip():
 
-        with st.spinner("Analyzing website…"):
-            scan_result = run_fraudshield_scan(hidden_url)
-
-        if not scan_result:
-            st.error("Unable to connect to FraudShield API.")
+    # ---------------- PROCESS THE SCAN ----------------
+    if run_scan:
+        if not hidden_url.strip():
+            st.error("Please enter a valid URL.")
         else:
-            risk_class = scan_result.get("risk_class", "Unknown")
-            risk_score = float(scan_result.get("risk_score", 0))
-            blacklist_flag = scan_result.get("blacklist_flag", 0)
+            with st.spinner("Scanning website…"):
+                scan_result = run_fraudshield_scan(hidden_url)
 
-            display_label, badge_color = map_risk_style(risk_class, blacklist_flag)
+            if not scan_result:
+                st.error("Scan failed — API unreachable.")
+            else:
+                risk_class = scan_result.get("risk_class", "Unknown")
+                risk_score = float(scan_result.get("risk_score", 0))
+                blacklist_flag = scan_result.get("blacklist_flag", 0)
 
-            st.markdown(f"""
-            <div style="background:white; padding:22px; border-radius:10px;
-                        border:1px solid #e5e7eb; margin-top:20px;">
-                <div style="text-align:center; margin-bottom:12px;">
-                    <span style="
-                        background:{badge_color};
-                        color:white;
-                        padding:10px 22px;
-                        border-radius:18px;
-                        font-size:22px;
-                        font-weight:600;">
-                        {display_label}
-                    </span>
-                </div>
-            """, unsafe_allow_html=True)
+                label, color = map_risk_style(risk_class, blacklist_flag)
 
-            # Gauge chart
-            fig = go.Figure(
-                go.Indicator(
-                    mode="gauge+number",
-                    value=risk_score,
-                    gauge={
-                        "axis": {"range": [0, 100]},
-                        "bar": {"color": "black"},
-                        "steps": [
-                            {"range": [0, 40], "color": "#d4f6e4"},
-                            {"range": [40, 70], "color": "#fff3cd"},
-                            {"range": [70, 100], "color": "#f8d7da"},
-                        ],
-                    },
+                st.markdown(
+                    f"""
+                    <div style="text-align:center;margin-top:25px;">
+                        <span style="
+                            background:{color};
+                            color:white;
+                            padding:14px 30px;
+                            border-radius:25px;
+                            font-size:24px;
+                            font-weight:600;">
+                            {label}
+                        </span>
+                    </div>
+                    """,
+                    unsafe_allow_html=True
                 )
-            )
-            st.plotly_chart(fig)
 
-            # Summary Output
-            st.write(f"""
-            **Summary**
-            - Website: **{hidden_url}**  
-            - Classification: **{display_label}**  
-            - Risk Score: **{risk_score:.1f} / 100**  
-            """)
+                fig = go.Figure(
+                    go.Indicator(
+                        mode="gauge+number",
+                        value=risk_score,
+                        gauge={
+                            "axis": {"range": [0, 100]},
+                            "bar": {"color": "black"},
+                            "steps": [
+                                {"range": [0, 40], "color": "#d4f6e4"},
+                                {"range": [40, 70], "color": "#fff3cd"},
+                                {"range": [70, 100], "color": "#f8d7da"},
+                            ],
+                        },
+                        number={"font": {"size": 48}}
+                    )
+                )
+                st.plotly_chart(fig, use_container_width=True)
 
-            update_log(st.session_state, hidden_url, risk_class)
+                st.success(f"Risk Score: **{risk_score} / 100** — {label}")
+                st.write(f"Scanned Website: **{hidden_url}**")
 
-            pdf_bytes = generate_pdf_report(hidden_url, risk_class, risk_score)
-            st.download_button("📄 Download PDF Report", pdf_bytes, "fraudshield_report.pdf")
 
 
 
@@ -709,6 +717,7 @@ st.markdown(
     "<p class='fs-footer'>FraudShield — Professional Real-Time Website Risk Evaluation</p>",
     unsafe_allow_html=True,
 )
+
 
 
 
