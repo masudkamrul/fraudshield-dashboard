@@ -92,6 +92,34 @@ st.markdown(
         margin-top: 40px;
     }
 
+    /* =====================================================
+       ✅ CENTER TAB BAR ONLY (NO OTHER UI IMPACT)
+       ===================================================== */
+    
+    /* Keep overall layout untouched */
+    div[data-testid="stTabs"] {
+        width: 100%;
+    }
+    
+    /* Center the tab list container */
+    div[data-testid="stTabs"] > div:first-child {
+        display: flex;
+        justify-content: center;
+    }
+    
+    /* Center the actual tabs */
+    div[data-testid="stTabs"] > div:first-child > div[role="tablist"] {
+        display: flex;
+        justify-content: center;
+        gap: 28px;
+    
+        margin: 0 auto;
+    }
+
+
+
+
+
     </style>
     """,
     unsafe_allow_html=True
@@ -1847,6 +1875,7 @@ st.markdown(
     "<p class='fs-footer'>FraudShield — Professional Real-Time Website Risk Evaluation</p>",
     unsafe_allow_html=True,
 )
+
 
 
 
