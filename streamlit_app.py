@@ -156,24 +156,24 @@ tab_scanner, tab_model, tab_api, tab_threats, tab_arch, tab_logic = st.tabs(
 
 
 # =========================================================
-# 1️⃣ SCANNER TAB — STREAMLIT-CORRECT HERO SCANNER
+# 1️⃣ SCANNER TAB — INPUT INSIDE BLUE HERO
 # =========================================================
 with tab_scanner:
 
-    # ---------------- HERO BACKGROUND ----------------
+    # ---------------- CSS ----------------
     st.markdown(
         """
         <style>
         .fs-hero {
             background: linear-gradient(90deg, #1F4E79, #1C6FB5);
-            padding: 70px 40px 120px 40px;
+            padding: 60px 40px 70px 40px;
             border-radius: 10px;
             text-align: center;
-            margin-bottom: -70px; /* pull scanner upward */
+            margin-bottom: 40px;
         }
 
         .fs-hero-title {
-            color: white;
+            color: #ffffff;
             font-size: 36px;
             font-weight: 700;
             margin-bottom: 8px;
@@ -182,32 +182,27 @@ with tab_scanner:
         .fs-hero-subtitle {
             color: #e2e8f0;
             font-size: 17px;
+            margin-bottom: 30px;
         }
 
-        /* Scanner container overlay */
-        .fs-scanner-overlay {
+        /* Center scanner row inside hero */
+        .fs-scan-row {
             max-width: 760px;
             margin: 0 auto;
-            background: white;
-            border-radius: 8px;
-            padding: 20px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.25);
-            position: relative;
-            z-index: 10;
         }
 
-        /* Input styling */
+        /* Input style */
         div[data-testid="stTextInput"] input {
             font-size: 18px;
-            height: 56px;
-            padding: 14px 18px;
+            padding: 16px 18px;
+            height: 54px;
             border-radius: 6px 0 0 6px;
-            border: 1px solid #cbd5e1;
+            border: none;
         }
 
-        /* Button styling */
+        /* Button style */
         div[data-testid="stButton"] > button {
-            height: 56px;
+            height: 54px;
             font-size: 17px;
             font-weight: 700;
             border-radius: 0 6px 6px 0;
@@ -221,12 +216,13 @@ with tab_scanner:
             background-color: #166d9c;
         }
 
+        /* Result card */
         .fs-card {
             background: #ffffff;
             padding: 22px;
             border-radius: 10px;
             border: 1px solid #e2e6ea;
-            margin-top: 24px;
+            margin-top: 20px;
             box-shadow: 0 2px 5px rgba(15,23,42,0.03);
         }
         </style>
@@ -234,7 +230,7 @@ with tab_scanner:
         unsafe_allow_html=True,
     )
 
-    # ---------------- HERO CONTENT ----------------
+    # ---------------- HERO START ----------------
     st.markdown(
         """
         <div class="fs-hero">
@@ -242,14 +238,12 @@ with tab_scanner:
             <div class="fs-hero-subtitle">
                 Enter a website to check for vulnerabilities, fraud signals, and security issues.
             </div>
-        </div>
         """,
         unsafe_allow_html=True,
     )
 
-    # ---------------- SCANNER OVERLAY ----------------
-    st.markdown('<div class="fs-scanner-overlay">', unsafe_allow_html=True)
-
+    # -------- Scanner row INSIDE hero --------
+    st.markdown('<div class="fs-scan-row">', unsafe_allow_html=True)
     col_input, col_button = st.columns([6, 1])
 
     with col_input:
@@ -262,7 +256,8 @@ with tab_scanner:
     with col_button:
         scan_clicked = st.button("SCAN NOW")
 
-    st.markdown("</div>", unsafe_allow_html=True)
+    st.markdown("</div></div>", unsafe_allow_html=True)
+    # ---------------- HERO END ----------------
 
     # ---------------- PROCESS SCAN ----------------
     if scan_clicked:
@@ -330,6 +325,7 @@ with tab_scanner:
                 )
 
                 st.markdown("</div>", unsafe_allow_html=True)
+
 
 
 
@@ -731,6 +727,7 @@ st.markdown(
     "<p class='fs-footer'>FraudShield — Professional Real-Time Website Risk Evaluation</p>",
     unsafe_allow_html=True,
 )
+
 
 
 
