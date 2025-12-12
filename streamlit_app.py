@@ -218,11 +218,35 @@ with tab_scanner:
             max-width: 520px;
             margin-left: auto;
             margin-right: auto;
-            background: rgba(255,255,255,0.12);
-            padding: 18px 22px;
-            border-radius: 10px;
+            padding: 20px 22px;
+            border-radius: 12px;
             color: white;
             display: none;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.25);
+            transition: background 0.6s ease;
+        }
+        
+        /* Risk background colors */
+        .bg-safe {
+            background: linear-gradient(135deg, #2e7d32, #4caf50);
+        }
+        
+        .bg-low {
+            background: linear-gradient(135deg, #f9a825, #fbc02d);
+        }
+        
+        .bg-suspicious {
+            background: linear-gradient(135deg, #ef6c00, #ff9800);
+        }
+        
+        .bg-high {
+            background: linear-gradient(135deg, #c62828, #f44336);
+        }
+        
+        .bg-blacklisted {
+            background: linear-gradient(135deg, #4a0000, #b71c1c);
+        }
+
         }
 
         .risk-badge {
@@ -723,6 +747,7 @@ st.markdown(
     "<p class='fs-footer'>FraudShield — Professional Real-Time Website Risk Evaluation</p>",
     unsafe_allow_html=True,
 )
+
 
 
 
