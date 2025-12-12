@@ -1274,75 +1274,301 @@ consistent user messaging, moderation policies, and safety experiences.
 
 
 # =========================================================
-# 5️⃣ ARCHITECTURE TAB
+# 5️⃣ SYSTEM ARCHITECTURE TAB (ENTERPRISE-GRADE)
 # =========================================================
 with tab_arch:
     st.markdown("<div class='fs-card'>", unsafe_allow_html=True)
-    st.markdown("<div class='section-header section-green'>🏗️ System Architecture</div>", unsafe_allow_html=True)
+    st.markdown(
+        "<div class='section-header section-green'>🏗️ System Architecture</div>",
+        unsafe_allow_html=True
+    )
 
     st.write(
         """
-FraudShield is implemented as a modular pipeline that can be easily integrated
-into platforms, browser extensions, and backend fraud engines.
-        """
-    )
-
-    st.markdown(
-        """
-**High-Level Pipeline**
-
-1. **URL Ingestion**  
-   The client (e.g., browser extension or platform) sends the URL to the FraudShield API.
-
-2. **Signal Extraction Layer**  
-   The backend collects:
-   - Domain registration age  
-   - HTTPS / SSL configuration  
-   - Security headers (HSTS, CSP)  
-   - Mixed-content indicators  
-   - Threat intelligence from Google Safe Browsing  
-
-3. **Machine-Learning Probability Engine**  
-   A trained classifier transforms these features into a fraud-likelihood probability.
-
-4. **Risk Calibration & Policy Layer**  
-   The probability is adjusted based on:
-   - Domain age (older domains → lower risk)  
-   - SSL/HTTPS presence (secure transport → lower risk)  
-   - Blacklist flags (phishing/malware → forced to very high risk)  
-
-5. **Classification & Explanation**  
-   The pipeline outputs:
-   - Risk score (0–100)  
-   - Risk class (Safe, Low Risk, Suspicious, High Risk, Blacklisted Threat)  
-   - Supporting signals and threat labels  
-
-6. **Delivery to Clients**  
-   Results are delivered to:
-   - Chrome extension overlay (user warnings)  
-   - Platforms (link safety checks)  
-   - This dashboard (for demonstration and analysis).  
+FraudShield is designed as a **modular, API-first security architecture** that can be
+embedded into a wide range of digital products, consumer platforms, and enterprise systems.
+The architecture emphasizes **scalability, explainability, and safety-first decision making**.
         """
     )
 
     st.markdown("---")
 
-    st.markdown("### Simplified Architecture (Code-Style View)")
+    # -----------------------------------------------------
+    # HIGH-LEVEL ARCHITECTURE OVERVIEW
+    # -----------------------------------------------------
+    st.markdown("### 🔍 High-Level Architecture Overview")
+
+    st.write(
+        """
+At a high level, FraudShield operates as a **real-time risk evaluation pipeline**.
+Each component is independently scalable and can evolve without disrupting the rest
+of the system.
+        """
+    )
+
+    st.markdown(
+        """
+**End-to-End Flow**
+
+1. **Client Request Layer**  
+   A client submits a URL for evaluation (e.g., browser extension, dashboard, backend service).
+
+2. **API Gateway & Validation**  
+   Requests pass through a gateway that performs:
+   - Input validation and normalization  
+   - Rate limiting and abuse prevention  
+   - Authentication (for partner or internal use)
+
+3. **Signal Collection & Enrichment Layer**  
+   The system gathers trust and security signals from multiple sources.
+
+4. **Risk Intelligence Engine**  
+   Signals are converted into structured features and evaluated by the ML model
+   and rule-based safety policies.
+
+5. **Decision & Classification Layer**  
+   The system produces interpretable outputs (score, category, explanation).
+
+6. **Delivery & Integration Layer**  
+   Results are returned in a platform-friendly format suitable for UI warnings,
+   moderation systems, or automated decision pipelines.
+        """
+    )
+
+    st.markdown("---")
+
+    # -----------------------------------------------------
+    # SIGNAL EXTRACTION LAYER (DETAILED)
+    # -----------------------------------------------------
+    st.markdown("### 🧩 Signal Extraction & Enrichment Layer")
+
+    st.write(
+        """
+This layer transforms a raw URL into **structured trust signals**.  
+It is intentionally extensible so new signals can be added without retraining
+the core model.
+        """
+    )
+
+    signal_df = pd.DataFrame(
+        [
+            {
+                "Signal Type": "Domain Intelligence",
+                "Examples": "Domain age, registrar reputation, lifecycle indicators",
+                "Why It Matters": "Fraud campaigns often rely on newly registered or frequently rotated domains"
+            },
+            {
+                "Signal Type": "Transport Security",
+                "Examples": "HTTPS status, SSL validity, protocol strength",
+                "Why It Matters": "Weak or missing encryption increases interception and impersonation risk"
+            },
+            {
+                "Signal Type": "Security Headers",
+                "Examples": "HSTS, CSP, X-Content-Type-Options",
+                "Why It Matters": "Modern legitimate sites typically deploy baseline security headers"
+            },
+            {
+                "Signal Type": "Content Integrity",
+                "Examples": "Mixed content indicators, insecure resource loading",
+                "Why It Matters": "Mixed content enables script injection and content manipulation"
+            },
+            {
+                "Signal Type": "Threat Intelligence",
+                "Examples": "Phishing or malware blacklist hits",
+                "Why It Matters": "Known malicious infrastructure should override normal risk scoring"
+            },
+        ]
+    )
+    st.table(signal_df)
+
+    st.markdown("---")
+
+    # -----------------------------------------------------
+    # RISK INTELLIGENCE ENGINE
+    # -----------------------------------------------------
+    st.markdown("### 🧠 Risk Intelligence Engine")
+
+    st.write(
+        """
+FraudShield intentionally combines **machine-learning inference** with
+**transparent rule-based policies**. This hybrid approach balances accuracy
+with explainability and operational safety.
+        """
+    )
+
+    st.markdown(
+        """
+**Why Hybrid Intelligence?**
+
+- Pure ML models can be opaque and brittle under adversarial conditions  
+- Rule-only systems fail to generalize to novel fraud patterns  
+- Hybrid systems provide **predictive power + deterministic safeguards**
+        """
+    )
 
     st.code(
         """
-def score_url(url: str):
-    signals = extract_signals(url)         # domain age, HTTPS, HSTS, CSP, mixed content, blacklist
-    features = build_feature_vector(signals)
-    proba = model.predict_proba([features])[0][1]  # ML probability
-    score = calibrate_score(proba, signals)        # apply safety rules
-    label = map_score_to_class(score, signals)     # Safe / Low / Suspicious / High / Blacklisted
-    return score, label, signals
+# Conceptual evaluation flow
+
+signals = extract_signals(url)
+features = build_feature_vector(signals)
+
+# Machine-learning probability
+fraud_probability = model.predict_proba([features])[0][1]
+
+# Convert to risk score
+raw_score = fraud_probability * 100
+
+# Policy-based calibration
+final_score = apply_safety_policies(raw_score, signals)
+
+# Classification
+risk_class = map_score_to_category(final_score, signals)
         """,
         language="python",
     )
 
+    st.markdown("---")
+
+    # -----------------------------------------------------
+    # POLICY & GOVERNANCE LAYER
+    # -----------------------------------------------------
+    st.markdown("### 🛡️ Policy, Governance & Safety Controls")
+
+    st.write(
+        """
+This layer ensures the system behaves **conservatively and predictably**
+in high-risk situations.
+        """
+    )
+
+    policy_df = pd.DataFrame(
+        [
+            {
+                "Control": "Blacklist Override",
+                "Purpose": "Immediately elevate risk when known malicious indicators are present"
+            },
+            {
+                "Control": "Score Calibration",
+                "Purpose": "Adjust raw ML output using domain age and security posture"
+            },
+            {
+                "Control": "Fail-Safe Defaults",
+                "Purpose": "Avoid false negatives when data is incomplete or unavailable"
+            },
+            {
+                "Control": "Explainable Categories",
+                "Purpose": "Ensure outputs are understandable by non-technical users"
+            },
+        ]
+    )
+    st.table(policy_df)
+
+    st.markdown("---")
+
+    # -----------------------------------------------------
+    # SCALABILITY & DEPLOYMENT MODEL
+    # -----------------------------------------------------
+    st.markdown("### 🚀 Scalability & Deployment Model")
+
+    st.write(
+        """
+FraudShield is designed to operate at **internet scale** with predictable latency.
+        """
+    )
+
+    deploy_df = pd.DataFrame(
+        [
+            {
+                "Layer": "API Layer",
+                "Design Choice": "Stateless REST API",
+                "Benefit": "Horizontal scaling and low-latency responses"
+            },
+            {
+                "Layer": "Model Inference",
+                "Design Choice": "Lightweight feature vector + compact model",
+                "Benefit": "Fast execution suitable for real-time use"
+            },
+            {
+                "Layer": "Threat Intelligence",
+                "Design Choice": "Cached lookups + periodic refresh",
+                "Benefit": "Reduced external dependency latency"
+            },
+            {
+                "Layer": "Observability",
+                "Design Choice": "Request logging & metrics",
+                "Benefit": "Auditability, tuning, and incident analysis"
+            },
+        ]
+    )
+    st.table(deploy_df)
+
+    st.markdown("---")
+
+    # -----------------------------------------------------
+    # INTEGRATION PATTERNS
+    # -----------------------------------------------------
+    st.markdown("### 🔌 Common Integration Patterns")
+
+    st.write(
+        """
+The architecture supports multiple real-world integration patterns without modification.
+        """
+    )
+
+    st.markdown(
+        """
+- **Browser-Side Protection**  
+  Real-time warnings when users navigate to risky destinations.
+
+- **Platform Safety Layer**  
+  Evaluate outbound links before allowing transactions or interactions.
+
+- **Moderation & Trust Pipelines**  
+  Feed risk signals into review queues or automated enforcement rules.
+
+- **Analytics & Compliance**  
+  Aggregate risk trends for reporting and continuous improvement.
+        """
+    )
+
+    st.markdown("---")
+
+    # -----------------------------------------------------
+    # ARCHITECTURAL PRINCIPLES
+    # -----------------------------------------------------
+    st.markdown("### 🧱 Core Architectural Principles")
+
+    principles = pd.DataFrame(
+        [
+            {"Principle": "Safety-First", "Description": "Bias toward protecting users over convenience"},
+            {"Principle": "Explainability", "Description": "Outputs must be understandable by non-experts"},
+            {"Principle": "Extensibility", "Description": "New signals can be added without re-architecture"},
+            {"Principle": "Vendor Neutrality", "Description": "No dependency on a single platform or ecosystem"},
+            {"Principle": "Low Friction", "Description": "Minimal latency and integration effort"},
+        ]
+    )
+    st.table(principles)
+
+    st.markdown(
+        """
+This architecture positions FraudShield as a **general-purpose trust and safety
+component** suitable for modern digital platforms operating at scale.
+        """
+    )
+
     st.markdown("</div>", unsafe_allow_html=True)
+
+
+
+
+
+
+
+
+
+
+
 
 # =========================================================
 # 6️⃣ RISK SCORING LOGIC TAB
@@ -1435,6 +1661,7 @@ st.markdown(
     "<p class='fs-footer'>FraudShield — Professional Real-Time Website Risk Evaluation</p>",
     unsafe_allow_html=True,
 )
+
 
 
 
