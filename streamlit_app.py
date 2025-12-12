@@ -1571,7 +1571,7 @@ component** suitable for modern digital platforms operating at scale.
 
 
 # =========================================================
-# 6️⃣ RISK SCORING LOGIC TAB
+# 6️⃣ RISK SCORING LOGIC TAB (ENTERPRISE-GRADE)
 # =========================================================
 with tab_logic:
     st.markdown("<div class='fs-card'>", unsafe_allow_html=True)
@@ -1579,76 +1579,260 @@ with tab_logic:
 
     st.write(
         """
-FraudShield combines the model’s probability output with a small set of
-transparent safety rules. This makes the system more explainable and
-suitable for real-world decision-making.
+FraudShield uses a **defense-in-depth scoring framework** that combines:
+(1) model-derived risk probability, (2) deterministic safety policies, and
+(3) quality controls that prevent misleading results when signals are incomplete.
+
+This hybrid approach is common in real-world Trust & Safety systems because it is:
+**predictive**, **explainable**, and **operationally safe** under adversarial conditions.
         """
     )
 
-    st.markdown("### Score → Class Mapping")
+    st.markdown("---")
+
+    # -----------------------------------------------------
+    # 1) SCORE LIFECYCLE
+    # -----------------------------------------------------
+    st.markdown("### 1) Risk Score Lifecycle (How a URL becomes a decision)")
+
+    st.markdown(
+        """
+**Step A — Normalize & Validate**  
+The URL is normalized (scheme, domain extraction) and checked for obvious input issues.
+
+**Step B — Collect Signals**  
+Signals are gathered (domain age, transport security posture, header indicators, threat intelligence flags, etc.).
+
+**Step C — Model Inference**  
+A trained classifier produces a fraud-likelihood probability (0–1).
+
+**Step D — Policy Calibration**  
+Transparent policies adjust raw probability into a final score (0–100) to enforce safety guarantees.
+
+**Step E — Decision Tier & Explanation**  
+The system returns (score, class) plus a short explanation and recommended action.
+        """
+    )
+
+    st.markdown("---")
+
+    # -----------------------------------------------------
+    # 2) SCORE → CLASS MAPPING + RECOMMENDED ACTIONS
+    # -----------------------------------------------------
+    st.markdown("### 2) Score → Class Mapping (with recommended action)")
 
     mapping_df = pd.DataFrame(
         [
-            {"Score Range": "0 – 10", "Class": "Safe"},
-            {"Score Range": "10 – 40", "Class": "Low Risk"},
-            {"Score Range": "40 – 70", "Class": "Suspicious"},
-            {"Score Range": "70 – 95", "Class": "High Risk"},
-            {"Score Range": "96 – 100 or blacklisted", "Class": "Blacklisted Threat"},
+            {"Score Range": "0 – 10", "Class": "Safe", "Suggested Action": "Allow", "User Guidance": "Normal browsing expected."},
+            {"Score Range": "10 – 40", "Class": "Low Risk", "Suggested Action": "Allow + Monitor", "User Guidance": "Proceed with standard caution."},
+            {"Score Range": "40 – 70", "Class": "Suspicious", "Suggested Action": "Warn", "User Guidance": "Avoid payments; verify legitimacy before continuing."},
+            {"Score Range": "70 – 95", "Class": "High Risk", "Suggested Action": "Strong Warn / Block (context-dependent)", "User Guidance": "High likelihood of scam behavior."},
+            {"Score Range": "96 – 100 or blacklisted", "Class": "Blacklisted Threat", "Suggested Action": "Block", "User Guidance": "Known malicious/phishing/malware signal present."},
         ]
     )
     st.table(mapping_df)
 
     st.markdown("---")
-    st.markdown("### Risk Adjustments (Illustrative Code)")
+
+    # -----------------------------------------------------
+    # 3) SAFETY POLICIES (ENTERPRISE CONTROLS)
+    # -----------------------------------------------------
+    st.markdown("### 3) Safety Policies (Deterministic controls used in production systems)")
+
+    st.write(
+        """
+Safety policies ensure the system behaves predictably in high-risk scenarios.
+They also reduce false negatives when attackers attempt to “look normal.”
+        """
+    )
+
+    policy_df = pd.DataFrame(
+        [
+            {"Policy Control": "Threat Intelligence Override", "Purpose": "If a domain matches a trusted blacklist, force the highest tier regardless of ML output."},
+            {"Policy Control": "New Domain Elevation", "Purpose": "Very young domains receive a risk lift because many fraud campaigns rely on short-lived domains."},
+            {"Policy Control": "Security Posture Penalty", "Purpose": "Missing HTTPS or weak security headers increases risk due to poor trust signals."},
+            {"Policy Control": "Signal Quality Fallback", "Purpose": "If key signals cannot be obtained, avoid over-confident 'Safe' ratings."},
+            {"Policy Control": "Score Smoothing", "Purpose": "Prevent extreme oscillations for borderline cases to keep user experience consistent."},
+        ]
+    )
+    st.table(policy_df)
+
+    st.markdown("---")
+
+    # -----------------------------------------------------
+    # 4) CONFIDENCE & SIGNAL QUALITY (IMPORTANT FOR REAL WORLD)
+    # -----------------------------------------------------
+    st.markdown("### 4) Confidence Handling (Signal Quality & Safe Defaults)")
+
+    st.write(
+        """
+Real-world scanners sometimes face missing or unreliable signals (timeouts, blocked headers, DNS issues).
+FraudShield can expose a **confidence level** (high/medium/low) to prevent misleading outcomes.
+
+**Example principle:**  
+If signal quality is low, FraudShield avoids returning “Safe” unless there is strong evidence.
+        """
+    )
 
     st.code(
         """
-# Start from model-derived score (0–100)
-score = raw_score
+# Illustrative confidence logic (conceptual)
 
-# Older domains → lower risk
-if domain_age_days > 3650:       # more than 10 years
-    score *= 0.75
+signal_coverage = collected_signals / expected_signals   # e.g., 0.65
+latency_ms = request_latency_ms
 
-# HTTPS present → slightly lower risk
-if https_flag == 1:
-    score *= 0.85
+if signal_coverage < 0.60:
+    confidence = "LOW"
+elif signal_coverage < 0.85:
+    confidence = "MEDIUM"
+else:
+    confidence = "HIGH"
 
-# High mixed-content ratio → increase risk
-if mixed_content_ratio > 0.3:
-    score *= 1.15
-
-# Blacklist overrides everything
-if blacklist_flag == 1:
-    score = 99.0
+# Safe-default: do not emit "Safe" when confidence is LOW
+if confidence == "LOW" and risk_class == "Safe":
+    risk_class = "Low Risk"
         """,
         language="python",
     )
 
-    st.markdown("### Threat Category Assignment (Illustrative Code)")
+    st.markdown("---")
+
+    # -----------------------------------------------------
+    # 5) CALIBRATION & ADJUSTMENTS (BETTER THAN SIMPLE MULTIPLIERS)
+    # -----------------------------------------------------
+    st.markdown("### 5) Risk Calibration (Policy-based score shaping)")
+
+    st.write(
+        """
+Instead of relying only on a raw ML score, calibration shapes the final score so it matches
+real-world expectations and safety requirements.
+        """
+    )
 
     st.code(
         """
+# Illustrative calibration logic (conceptual)
+
+score = raw_score  # 0..100 from model probability
+
+# 1) Threat intelligence override
 if blacklist_flag == 1:
-    threat_category = "Phishing/Malware Source"
-elif score >= 80:
-    threat_category = "High Fraud Likelihood"
-elif score >= 60:
-    threat_category = "Moderate Fraud Indicators"
-elif https_flag == 0:
-    threat_category = "Weak Transport Security"
-elif mixed_content_ratio > 0.0:
-    threat_category = "Mixed Content Exploitation Risk"
-else:
-    threat_category = "Safe or Low Risk"
+    score = 99.0
+
+# 2) New domain uplift (example)
+if domain_age_days is not None:
+    if domain_age_days < 30:
+        score = max(score, 85.0)   # very young: strongly suspicious by policy
+    elif domain_age_days < 180:
+        score = max(score, 60.0)   # new-ish: elevated baseline
+    elif domain_age_days > 3650:
+        score *= 0.80              # mature domains reduce risk, not eliminate it
+
+# 3) Transport security penalty
+if https_flag == 0:
+    score = min(100.0, score + 12.0)
+
+# 4) Security header posture shaping
+header_score = (hsts_flag + csp_flag)  # simple proxy
+if header_score == 0:
+    score = min(100.0, score + 6.0)
+
+# 5) Mixed content penalty
+if mixed_content_ratio is not None and mixed_content_ratio > 0.30:
+    score = min(100.0, score + 8.0)
+
+score = max(0.0, min(100.0, score))
+        """,
+        language="python",
+    )
+
+    st.markdown("---")
+
+    # -----------------------------------------------------
+    # 6) DECISION OUTPUT (WHAT PARTNERS/USERS NEED)
+    # -----------------------------------------------------
+    st.markdown("### 6) Decision Output (What a consuming system receives)")
+
+    st.write(
+        """
+A production-ready risk engine should return more than a number. FraudShield is structured to return:
+- **Risk Score (0–100)**  
+- **Risk Class (tier label)**  
+- **Suggested Action (allow / monitor / warn / block)**  
+- **Short Explanation (human-readable)**  
+- **Confidence (high/medium/low)**  
+This enables both user-facing warnings and platform-side automation.
+        """
+    )
+
+    st.code(
+        """
+# Example response shape (illustrative)
+
+{
+  "url": "https://example.com",
+  "risk_score": 68.2,
+  "risk_class": "Suspicious",
+  "suggested_action": "Warn",
+  "confidence": "HIGH",
+  "explanations": [
+      "Domain is newly registered",
+      "Weak security posture (missing key headers)",
+      "Risk indicators align with common scam patterns"
+  ]
+}
+        """,
+        language="json",
+    )
+
+    st.markdown("---")
+
+    # -----------------------------------------------------
+    # 7) AUDITABILITY (CRITICAL FOR SERIOUS ADOPTION)
+    # -----------------------------------------------------
+    st.markdown("### 7) Auditability & Governance (Operational Readiness)")
+
+    st.write(
+        """
+In real-world deployments, partners often require audit trails for:
+incident review, user complaints, false-positive analysis, and continuous tuning.
+
+FraudShield supports an audit-friendly approach by logging:
+- timestamp, normalized domain, decision tier, score  
+- key signals (non-sensitive)  
+- model version + policy version  
+This makes decisions reproducible and helps improve accuracy over time.
+        """
+    )
+
+    st.code(
+        """
+# Example audit log schema (illustrative)
+
+log_entry = {
+  "timestamp": "2025-12-12T18:07:00Z",
+  "domain": "example.com",
+  "risk_score": 68.2,
+  "risk_class": "Suspicious",
+  "confidence": "HIGH",
+  "model_version": "v1.0",
+  "policy_version": "p1.2",
+  "signals": {
+     "domain_age_days": 41,
+     "https_flag": 1,
+     "hsts_flag": 0,
+     "csp_flag": 0,
+     "blacklist_flag": 0
+  }
+}
         """,
         language="python",
     )
 
     st.markdown(
         """
-These rules make the scoring process more interpretable for non-technical
-stakeholders while still benefiting from machine-learning predictions.
+This design makes the scoring logic **explainable**, **defensible**, and suitable for
+security-sensitive environments where reliability matters.
         """
     )
 
@@ -1661,6 +1845,7 @@ st.markdown(
     "<p class='fs-footer'>FraudShield — Professional Real-Time Website Risk Evaluation</p>",
     unsafe_allow_html=True,
 )
+
 
 
 
