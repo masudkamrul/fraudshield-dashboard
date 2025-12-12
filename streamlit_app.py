@@ -18,40 +18,73 @@ st.set_page_config(
 )
 
 # ---------------------------------------------------------
-# PROFESSIONAL CLEAN CSS
+# CORPORATE CLEAN CSS
 # ---------------------------------------------------------
 st.markdown(
     """
     <style>
 
     body {
-        background-color: #f8f9fa;
+        background-color: #f5f6f8;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     }
 
     .main-title {
         text-align: center;
-        padding: 20px 0 10px 0;
+        padding: 20px 0 5px 0;
+    }
+
+    .subtitle {
+        text-align: center;
+        color: #555;
+        margin-bottom: 15px;
     }
 
     .fs-card {
-        background: white;
-        padding: 25px;
+        background: #ffffff;
+        padding: 22px;
         border-radius: 10px;
-        border: 1px solid #e6e6e6;
-        margin-bottom: 25px;
-        box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+        border: 1px solid #e2e6ea;
+        margin-bottom: 22px;
+        box-shadow: 0 2px 5px rgba(15,23,42,0.03);
     }
 
-    /* URL Input Style */
+    /* Section header bars */
+    .section-header {
+        padding: 10px 16px;
+        border-radius: 6px;
+        color: white;
+        font-weight: 600;
+        margin-bottom: 14px;
+        font-size: 18px;
+    }
+    .section-blue { background: #2563eb; }
+    .section-purple { background: #6d28d9; }
+    .section-orange { background: #ea580c; }
+    .section-green { background: #16a34a; }
+    .section-red { background: #b91c1c; }
+    .section-grey { background: #4b5563; }
+
+    /* URL Input Style - scanner */
     .stTextInput>div>div>input {
         font-size: 18px !important;
         padding: 14px 16px !important;
         height: 55px !important;
         border-radius: 8px !important;
-        border: 1.5px solid #bdbdbd !important;
+        border: 1.6px solid #b0b8c4 !important;
     }
 
-    /* Footer */
+    /* Info box */
+    .info-box {
+        background: #eef2ff;
+        border-left: 4px solid #4f46e5;
+        padding: 10px 14px;
+        border-radius: 6px;
+        font-size: 14px;
+        color: #374151;
+        margin-top: 8px;
+    }
+
     .fs-footer {
         text-align: center;
         color: gray;
@@ -67,9 +100,10 @@ st.markdown(
 # ---------------------------------------------------------
 # HEADER
 # ---------------------------------------------------------
-st.markdown("<h1 class='main-title'>🛡️ FraudShield – Website Risk Evaluation</h1>", unsafe_allow_html=True)
-st.write(
-    "A professional dashboard demonstrating how FraudShield evaluates online shopping websites using machine-learning and security signals."
+st.markdown("<h1 class='main-title'>🛡️ FraudShield – Website Risk Evaluation Dashboard</h1>", unsafe_allow_html=True)
+st.markdown(
+    "<p class='subtitle'>Professional interface to demonstrate how FraudShield evaluates website safety using machine learning and security signals.</p>",
+    unsafe_allow_html=True
 )
 
 # ---------------------------------------------------------
@@ -81,6 +115,7 @@ def map_risk_style(risk_class: str, blacklist_flag: int = 0):
     labels & colors used in the Chrome extension.
     """
 
+    # Blacklisted overrides everything
     if blacklist_flag:
         return "☠️ Blacklisted Threat", "#B71C1C"
 
@@ -96,11 +131,12 @@ def map_risk_style(risk_class: str, blacklist_flag: int = 0):
     if risk_class == "High Risk":
         return "🔴 High Risk", "#F44336"
 
+    # Fallback
     return "❓ Unknown", "#95a5a6"
 
 
 # ---------------------------------------------------------
-# TABS FOR 1–6 SECTIONS
+# TABS
 # ---------------------------------------------------------
 tab_scanner, tab_model, tab_api, tab_threats, tab_arch, tab_logic = st.tabs(
     [
@@ -118,7 +154,9 @@ tab_scanner, tab_model, tab_api, tab_threats, tab_arch, tab_logic = st.tabs(
 # =========================================================
 with tab_scanner:
     st.markdown("<div class='fs-card'>", unsafe_allow_html=True)
-    st.subheader("🔍 Website Risk Scanner")
+    st.markdown("<div class='section-header section-blue'>🔍 Website Risk Scanner</div>", unsafe_allow_html=True)
+
+    st.write("Enter any website URL below to see its FraudShield risk classification and score.")
 
     url = st.text_input(
         "",
@@ -126,108 +164,124 @@ with tab_scanner:
         key="scanner_url",
     )
 
+    st.markdown(
+        """
+        <div class="info-box">
+        Tip: This scanner uses the same backend engine as the FraudShield browser extension and API.
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+
     scan_result = None
 
     if st.button("Run Scan", use_container_width=True, key="scan_button"):
-        with st.spinner("Analyzing website…"):
-            scan_result = run_fraudshield_scan(url)
-
-        if not scan_result:
-            st.error("Unable to connect to FraudShield API.")
+        if not url.strip():
+            st.error("Please provide a valid URL before scanning.")
         else:
-            risk_class = scan_result.get("risk_class", "Unknown")
-            risk_score = float(scan_result.get("risk_score", 0))
-            blacklist_flag = scan_result.get("blacklist_flag", 0)
+            with st.spinner("Analyzing website…"):
+                scan_result = run_fraudshield_scan(url)
 
-            display_label, badge_color = map_risk_style(risk_class, blacklist_flag)
+            if not scan_result:
+                st.error("Unable to connect to FraudShield API.")
+            else:
+                risk_class = scan_result.get("risk_class", "Unknown")
+                risk_score = float(scan_result.get("risk_score", 0))
+                blacklist_flag = scan_result.get("blacklist_flag", 0)
 
-            # Result card (badge + gauge together)
-            st.markdown("<div class='fs-card' style='text-align:center;'>", unsafe_allow_html=True)
+                display_label, badge_color = map_risk_style(risk_class, blacklist_flag)
 
-            # Risk badge
-            st.markdown(
-                f"""
-                <div style="
-                    background:{badge_color};
-                    color:white;
-                    padding:10px 22px;
-                    border-radius:16px;
-                    display:inline-block;
-                    font-size:22px;
-                    font-weight:600;
-                    margin-bottom:10px;">
-                    {display_label}
-                </div>
-                """,
-                unsafe_allow_html=True,
-            )
+                # RESULT BLOCK
+                st.markdown("<div class='fs-card'>", unsafe_allow_html=True)
 
-            # Gauge
-            fig = go.Figure(
-                go.Indicator(
-                    mode="gauge+number",
-                    value=risk_score,
-                    gauge={
-                        "axis": {"range": [0, 100]},
-                        "bar": {"color": "black"},
-                        "steps": [
-                            {"range": [0, 40], "color": "#d4f6e4"},
-                            {"range": [40, 70], "color": "#fff3cd"},
-                            {"range": [70, 100], "color": "#f8d7da"},
-                        ],
-                    },
-                    number={"font": {"size": 42}},
-                    title={"text": ""},
+                # Centered badge
+                st.markdown(
+                    f"""
+                    <div style="text-align:center; margin-bottom:8px;">
+                        <span style="
+                            background:{badge_color};
+                            color:white;
+                            padding:10px 22px;
+                            border-radius:18px;
+                            font-size:20px;
+                            font-weight:600;
+                            display:inline-block;">
+                            {display_label}
+                        </span>
+                    </div>
+                    """,
+                    unsafe_allow_html=True,
                 )
-            )
-            st.plotly_chart(fig, use_container_width=False)
 
-            # Summary
-            st.markdown(
-                f"""
-                <p style="font-size:16px; margin-top:10px;">
-                Website <strong>{url}</strong> is classified as <strong>{display_label}</strong>.<br>
-                Risk score: <strong>{risk_score:.1f} / 100</strong>
-                </p>
-                """,
-                unsafe_allow_html=True,
-            )
+                # Gauge
+                fig = go.Figure(
+                    go.Indicator(
+                        mode="gauge+number",
+                        value=risk_score,
+                        gauge={
+                            "axis": {"range": [0, 100]},
+                            "bar": {"color": "black"},
+                            "steps": [
+                                {"range": [0, 40], "color": "#d4f6e4"},
+                                {"range": [40, 70], "color": "#fff3cd"},
+                                {"range": [70, 100], "color": "#f8d7da"},
+                            ],
+                        },
+                        number={"font": {"size": 40}},
+                        title={"text": ""},
+                    )
+                )
+                st.plotly_chart(fig, use_container_width=False)
 
-            # Key indicators (high level)
-            st.markdown(
-                """
-                **Key signals used in this decision include:**
-                - Domain age and trust history  
-                - HTTPS / SSL configuration  
-                - Security headers (HSTS, CSP)  
-                - Google Safe Browsing blacklist checks  
-                - Mixed-content and metadata indicators  
-                """
-            )
+                # Summary
+                st.markdown(
+                    f"""
+                    **Summary**
 
-            # Log for history
-            update_log(st.session_state, url, risk_class)
+                    - Website: **{url}**  
+                    - Classification: **{display_label}**  
+                    - Risk Score: **{risk_score:.1f} / 100**  
+                    """,
+                    unsafe_allow_html=True,
+                )
 
-            # PDF report
-            pdf_bytes = generate_pdf_report(url, risk_class, risk_score)
-            st.download_button(
-                "📄 Download PDF Report",
-                pdf_bytes,
-                "fraudshield_report.pdf",
-                mime="application/pdf",
-            )
+                # Key indicators (high-level)
+                st.markdown(
+                    """
+                    **Key signals used in this evaluation include:**
+                    - Domain age and trust history  
+                    - HTTPS / SSL configuration  
+                    - Security headers (HSTS, CSP)  
+                    - Google Safe Browsing blacklist checks  
+                    - Mixed-content and metadata indicators  
+                    """
+                )
 
-            st.markdown("</div>", unsafe_allow_html=True)
+                # Log for history
+                update_log(st.session_state, url, risk_class)
+
+                # PDF report
+                pdf_bytes = generate_pdf_report(url, risk_class, risk_score)
+                st.download_button(
+                    "📄 Download PDF Report",
+                    pdf_bytes,
+                    "fraudshield_report.pdf",
+                    mime="application/pdf",
+                )
+
+                st.markdown("</div>", unsafe_allow_html=True)
 
     st.markdown("</div>", unsafe_allow_html=True)
 
-    # Scan history at bottom of Scanner tab
+    # Scan history
     st.markdown("<div class='fs-card'>", unsafe_allow_html=True)
-    st.subheader("📁 Recent Scan History")
+    st.markdown("<div class='section-header section-grey'>📁 Recent Scan History</div>", unsafe_allow_html=True)
+
     if "history" in st.session_state and len(st.session_state["history"]) > 0:
         st.dataframe(pd.DataFrame(st.session_state["history"]), use_container_width=True)
     else:
         st.write("No scans performed yet.")
+
     st.markdown("</div>", unsafe_allow_html=True)
 
 # =========================================================
@@ -235,18 +289,16 @@ with tab_scanner:
 # =========================================================
 with tab_model:
     st.markdown("<div class='fs-card'>", unsafe_allow_html=True)
-    st.subheader("🧠 Model Intelligence Overview")
+    st.markdown("<div class='section-header section-purple'>🧠 Model Intelligence</div>", unsafe_allow_html=True)
 
     st.write(
         """
-FraudShield uses a hybrid machine-learning and rules-based risk engine.
-The current deployed model evaluates each website using a compact set of
-security and trust signals, then produces a probability-based risk score
-between 0 and 100.
+FraudShield uses a compact but carefully designed machine-learning model
+combined with rules, to convert security and trust signals into an interpretable
+website risk score between 0 and 100.
         """
     )
 
-    # High-level metrics
     col1, col2, col3 = st.columns(3)
     col1.metric("Model Accuracy", "95%")
     col2.metric("AUC Score", "0.805")
@@ -260,7 +312,7 @@ between 0 and 100.
         [
             {
                 "Input Feature": "Domain Age (days)",
-                "Description": "Number of days since the domain was registered. New domains are more likely to be risky.",
+                "Description": "Number of days since the domain was registered. New domains often correlate with scams.",
             },
             {
                 "Input Feature": "HTTPS Flag",
@@ -268,19 +320,19 @@ between 0 and 100.
             },
             {
                 "Input Feature": "HSTS Indicator",
-                "Description": "Presence of HTTP Strict Transport Security (header or meta). Indicates stronger transport security.",
+                "Description": "Presence of HTTP Strict Transport Security header/meta, indicating stronger transport security.",
             },
             {
                 "Input Feature": "CSP Indicator",
-                "Description": "Presence of a Content Security Policy, which reduces script injection and malicious content.",
+                "Description": "Presence of a Content Security Policy, helping prevent script injection and content abuse.",
             },
             {
                 "Input Feature": "Mixed Content Ratio",
-                "Description": "Whether secure pages still load insecure resources. High ratios indicate poor security hygiene.",
+                "Description": "Whether secure pages still load insecure HTTP resources.",
             },
             {
                 "Input Feature": "Safe Browsing Blacklist Flag",
-                "Description": "Whether Google Safe Browsing has flagged the site as phishing or malware.",
+                "Description": "Whether Google Safe Browsing or a similar list has flagged the site as phishing/malware.",
             },
         ]
     )
@@ -288,7 +340,36 @@ between 0 and 100.
     st.table(model_inputs)
 
     st.markdown("---")
+    st.markdown("### Internal Feature Vector (Illustrative Code)")
 
+    st.code(
+        """
+# Example of how internal features are prepared before scoring
+features = [
+    domain_age_days,   # e.g., 184
+    https_flag,        # 1 if HTTPS is enabled, otherwise 0
+    hsts_flag,         # 1 if HSTS header/meta detected
+    csp_flag,          # 1 if CSP header/meta detected
+    mixed_content_ratio  # value between 0 and 1
+]
+        """,
+        language="python",
+    )
+
+    st.markdown("### Model Probability Computation (Illustrative)")
+
+    st.code(
+        """
+# ML model predicts probability of fraud-like behavior
+proba = model.predict_proba([features])[0][1]  # fraud-likelihood
+
+# Convert to 0–100 scale
+raw_score = proba * 100.0
+        """,
+        language="python",
+    )
+
+    st.markdown("---")
     st.markdown("### Feature Importance (Illustrative)")
 
     feature_data = pd.DataFrame(
@@ -313,14 +394,16 @@ between 0 and 100.
 # =========================================================
 with tab_api:
     st.markdown("<div class='fs-card'>", unsafe_allow_html=True)
-    st.subheader("🔌 API Explorer")
+    st.markdown("<div class='section-header section-blue'>🔌 API Explorer</div>", unsafe_allow_html=True)
 
     st.write(
-        "Use this panel to see the raw JSON response returned by the FraudShield scoring API."
+        "This section shows how external platforms like FindMe can directly query the FraudShield API."
     )
 
     api_url = st.text_input(
-        "URL to test with API", placeholder="https://example.com", key="api_url_input"
+        "URL to test via API",
+        placeholder="https://example.com",
+        key="api_url_input"
     )
 
     if st.button("Call API", key="api_call_button"):
@@ -335,9 +418,8 @@ with tab_api:
 
     st.markdown("---")
 
-    st.markdown("### Integration Examples")
+    st.markdown("### Python Integration Example")
 
-    st.write("**Python example:**")
     st.code(
         """
 import requests
@@ -351,7 +433,8 @@ print(response.json())
         language="python",
     )
 
-    st.write("**cURL example:**")
+    st.markdown("### cURL Example")
+
     st.code(
         """
 curl -X POST \\
@@ -369,13 +452,13 @@ curl -X POST \\
 # =========================================================
 with tab_threats:
     st.markdown("<div class='fs-card'>", unsafe_allow_html=True)
-    st.subheader("⚠️ Threat Categories")
+    st.markdown("<div class='section-header section-orange'>⚠️ Threat Categories</div>", unsafe_allow_html=True)
 
     st.write(
         """
-FraudShield not only assigns a numeric risk score, it also interprets the
-signals into higher-level threat categories. These categories help platforms
-like FindMe understand *why* a website is considered risky.
+In addition to a numeric score, FraudShield interprets security signals into
+higher-level threat categories. These labels help non-technical users quickly
+understand the nature of the risk.
         """
     )
 
@@ -387,35 +470,31 @@ like FindMe understand *why* a website is considered risky.
             },
             {
                 "Threat Category": "Young Domain Risk",
-                "Description": "Recently registered domains with limited trust history, modest risk score.",
+                "Description": "Recently registered domain with limited history; monitored for abuse.",
             },
             {
                 "Threat Category": "New Domain Fraud Risk",
-                "Description": "Very young domains combined with elevated risk score, often linked to pop-up scams.",
+                "Description": "Very young domains and elevated risk scores, often seen in short-lived scam shops.",
             },
             {
                 "Threat Category": "Weak Transport Security",
-                "Description": "Lack of HTTPS or serious SSL issues, exposing users to interception and manipulation.",
+                "Description": "Lack of HTTPS or critical SSL issues, exposing users to interception.",
             },
             {
                 "Threat Category": "Mixed Content Exploitation Risk",
-                "Description": "HTTPS pages loading insecure HTTP resources, allowing attackers to inject content.",
+                "Description": "HTTPS pages loading insecure HTTP resources, which attackers can tamper with.",
             },
             {
                 "Threat Category": "High Fraud Likelihood",
-                "Description": "Multiple negative signals and a high model score, strongly suggesting fraud or abuse.",
+                "Description": "Multiple negative signals and a high model score strongly indicate fraud.",
             },
             {
                 "Threat Category": "Moderate Fraud Indicators",
-                "Description": "Some risk factors present; requires caution when transacting.",
-            },
-            {
-                "Threat Category": "Potential Fraud Indicators",
-                "Description": "Non-ideal configuration with mild risk; monitored for escalation.",
+                "Description": "Some warning signs present; caution recommended for transactions.",
             },
             {
                 "Threat Category": "Phishing/Malware Source",
-                "Description": "Direct match in Safe Browsing or similar lists; treated as a blacklisted threat.",
+                "Description": "Known phishing or malware distribution, based on blacklist hits.",
             },
         ]
     )
@@ -429,47 +508,68 @@ like FindMe understand *why* a website is considered risky.
 # =========================================================
 with tab_arch:
     st.markdown("<div class='fs-card'>", unsafe_allow_html=True)
-    st.subheader("🏗️ FraudShield System Architecture")
+    st.markdown("<div class='section-header section-green'>🏗️ System Architecture</div>", unsafe_allow_html=True)
 
     st.write(
         """
-FraudShield is structured as an end-to-end pipeline that can be easily
-integrated into platforms like FindMe:
+FraudShield is implemented as a modular pipeline that can be easily integrated
+into platforms such as FindMe, browser extensions, and backend fraud engines.
         """
     )
 
     st.markdown(
         """
+**High-Level Pipeline**
+
 1. **URL Ingestion**  
-   The client (browser extension, platform, or API client) sends a website URL to the FraudShield API.
+   The client (e.g., browser extension or platform) sends the URL to the FraudShield API.
 
 2. **Signal Extraction Layer**  
    The backend collects:
-   - Domain age and registration data  
-   - HTTPS and SSL configuration  
+   - Domain registration age  
+   - HTTPS / SSL configuration  
    - Security headers (HSTS, CSP)  
    - Mixed-content indicators  
    - Threat intelligence from Google Safe Browsing  
 
 3. **Machine-Learning Probability Engine**  
-   A trained classifier processes these features and produces a fraud-likelihood probability.
+   A trained classifier transforms these features into a fraud-likelihood probability.
 
 4. **Risk Calibration & Policy Layer**  
-   The probability is adjusted based on domain age, SSL strength, and blacklist flags.  
-   Blacklisted sites are automatically escalated.
+   The probability is adjusted based on:
+   - Domain age (older domains → lower risk)  
+   - SSL/HTTPS presence (secure transport → lower risk)  
+   - Blacklist flags (phishing/malware → forced to very high risk)  
 
 5. **Classification & Explanation**  
-   The final output includes:
+   The pipeline outputs:
    - Risk score (0–100)  
    - Risk class (Safe, Low Risk, Suspicious, High Risk, Blacklisted Threat)  
-   - Underlying signals (domain age, HTTPS, HSTS, CSP, blacklist flag)  
+   - Supporting signals and threat labels  
 
 6. **Delivery to Clients**  
-   The result is returned to:
-   - Chrome extension (real-time user warnings)  
-   - Platforms such as FindMe (link safety checks)  
-   - Dashboard (this interface) for analysis, demos, and reporting.
+   Results are delivered to:
+   - Chrome extension overlay (user warnings)  
+   - Platforms like FindMe (link safety checks)  
+   - This dashboard (for demonstration and analysis).  
         """
+    )
+
+    st.markdown("---")
+
+    st.markdown("### Simplified Architecture (Code-Style View)")
+
+    st.code(
+        """
+def score_url(url: str):
+    signals = extract_signals(url)         # domain age, HTTPS, HSTS, CSP, mixed content, blacklist
+    features = build_feature_vector(signals)
+    proba = model.predict_proba([features])[0][1]  # ML probability
+    score = calibrate_score(proba, signals)        # apply safety rules
+    label = map_score_to_class(score, signals)     # Safe / Low / Suspicious / High / Blacklisted
+    return score, label, signals
+        """,
+        language="python",
     )
 
     st.markdown("</div>", unsafe_allow_html=True)
@@ -479,13 +579,13 @@ integrated into platforms like FindMe:
 # =========================================================
 with tab_logic:
     st.markdown("<div class='fs-card'>", unsafe_allow_html=True)
-    st.subheader("📐 Risk Scoring Logic")
+    st.markdown("<div class='section-header section-red'>📐 Risk Scoring Logic</div>", unsafe_allow_html=True)
 
     st.write(
         """
-FraudShield’s scoring engine converts security signals into an interpretable
-0–100 risk score, then maps that score into the same labels used by the
-Chrome extension.
+FraudShield combines the model’s probability output with a small set of
+transparent safety rules. This makes the system more explainable and
+suitable for real-world decision-making.
         """
     )
 
@@ -500,24 +600,59 @@ Chrome extension.
             {"Score Range": "96 – 100 or blacklisted", "Class": "Blacklisted Threat"},
         ]
     )
-
     st.table(mapping_df)
 
     st.markdown("---")
+    st.markdown("### Risk Adjustments (Illustrative Code)")
 
-    st.markdown("### Adjustments Applied Before Classification")
+    st.code(
+        """
+# Start from model-derived score (0–100)
+score = raw_score
+
+# Older domains → lower risk
+if domain_age_days > 3650:       # more than 10 years
+    score *= 0.75
+
+# HTTPS present → slightly lower risk
+if https_flag == 1:
+    score *= 0.85
+
+# High mixed-content ratio → increase risk
+if mixed_content_ratio > 0.3:
+    score *= 1.15
+
+# Blacklist overrides everything
+if blacklist_flag == 1:
+    score = 99.0
+        """,
+        language="python",
+    )
+
+    st.markdown("### Threat Category Assignment (Illustrative Code)")
+
+    st.code(
+        """
+if blacklist_flag == 1:
+    threat_category = "Phishing/Malware Source"
+elif score >= 80:
+    threat_category = "High Fraud Likelihood"
+elif score >= 60:
+    threat_category = "Moderate Fraud Indicators"
+elif https_flag == 0:
+    threat_category = "Weak Transport Security"
+elif mixed_content_ratio > 0.0:
+    threat_category = "Mixed Content Exploitation Risk"
+else:
+    threat_category = "Safe or Low Risk"
+        """,
+        language="python",
+    )
 
     st.markdown(
         """
-The raw model probability is adjusted with straightforward rules:
-
-- **Very old domains** (more than 10 years) → risk reduced  
-- **HTTPS enabled** → risk reduced  
-- **Safe Browsing blacklist flag** → score forced near 99 and labeled as Blacklisted Threat  
-
-This combination of statistical prediction and clear safety rules helps
-make the output stable, explainable, and suitable for real-world use
-on platforms like FindMe.
+These rules make the scoring process more interpretable for non-technical
+stakeholders while still benefiting from machine-learning predictions.
         """
     )
 
