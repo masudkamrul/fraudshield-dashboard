@@ -91,27 +91,80 @@ st.markdown(
         font-size: 13px;
         margin-top: 40px;
     }
-        /* =====================================================
-       ✅ CENTER TAB BAR ONLY (DOES NOT AFFECT CONTENT)
+    /* =====================================================
+       ✅ FINAL CENTERED TAB BAR (NO HERO IMPACT)
        ===================================================== */
     
-    /* Keep full-width container intact */
+    /* Keep Streamlit layout normal */
     div[data-testid="stTabs"] {
         width: 100%;
     }
     
-    /* Center ONLY the tab buttons row */
-    div[data-testid="stTabs"] > div[role="tablist"] {
+    /* This is the REAL tab row container */
+    div[data-testid="stTabs"] > div:first-child {
+        display: flex;
+        justify-content: center;
+    }
+    
+    /* The actual tab buttons */
+    div[data-testid="stTabs"] > div:first-child > div[role="tablist"] {
         display: flex;
         justify-content: center;
         gap: 28px;
     
         max-width: 900px;
+        width: fit-content;
+    
         margin: 0 auto 18px auto;
+        padding-bottom: 6px;
     
         border-bottom: 2px solid #e5e7eb;
-        padding-bottom: 6px;
     }
+    
+    /* Individual tabs */
+    div[data-testid="stTabs"] button[role="tab"] {
+        background: transparent;
+        border: none;
+        font-size: 15px;
+        font-weight: 600;
+        color: #374151;
+        padding: 10px 6px;
+        position: relative;
+        transition: all 0.25s ease;
+    }
+    
+    /* Hover */
+    div[data-testid="stTabs"] button[role="tab"]:hover {
+        color: #2563eb;
+    }
+    
+    /* Active tab */
+    div[data-testid="stTabs"] button[role="tab"][aria-selected="true"] {
+        color: #dc2626;
+    }
+    
+    /* Active underline */
+    div[data-testid="stTabs"] button[role="tab"][aria-selected="true"]::after {
+        content: "";
+        position: absolute;
+        left: 0;
+        bottom: -8px;
+        width: 100%;
+        height: 3px;
+        background: #dc2626;
+        border-radius: 3px;
+    }
+    
+    /* Remove focus outline */
+    div[data-testid="stTabs"] button:focus {
+        outline: none;
+        box-shadow: none;
+    }
+
+
+
+
+
 
 
 
@@ -1869,6 +1922,7 @@ st.markdown(
     "<p class='fs-footer'>FraudShield — Professional Real-Time Website Risk Evaluation</p>",
     unsafe_allow_html=True,
 )
+
 
 
 
