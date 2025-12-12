@@ -243,16 +243,23 @@ with tab_scanner:
     </div>
 
     <script>
-        function submitFraudShieldScan() {
-            const url = document.getElementById("fs_url").value;
-
-            const hiddenInput = window.parent.document.querySelector('input[data-testid="stTextInput"]');
-            hiddenInput.value = url;
-            hiddenInput.dispatchEvent(new Event("input", { bubbles: true }));
-
-            const hiddenBtn = window.parent.document.querySelector('button[data-scan="hidden"]');
-            hiddenBtn.click();
+    function submitFraudShieldScan() {
+        const url = document.getElementById("fs_url").value;
+    
+        if (!url || url.trim() === "") {
+            alert("Please enter a valid URL.");
+            return;
         }
+    
+        // Write into Streamlit hidden input
+        const hiddenInput = document.querySelector('#fs_hidden_input');
+        hiddenInput.value = url;
+        hiddenInput.dispatchEvent(new Event("input", { bubbles: true }));
+    
+        // Trigger Streamlit hidden button
+        const hiddenBtn = document.querySelector('#fs_hidden_button');
+        hiddenBtn.click();
+    }
     </script>
     """
 
@@ -736,6 +743,7 @@ st.markdown(
     "<p class='fs-footer'>FraudShield — Professional Real-Time Website Risk Evaluation</p>",
     unsafe_allow_html=True,
 )
+
 
 
 
