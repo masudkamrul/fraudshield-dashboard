@@ -18,34 +18,17 @@ st.set_page_config(
 )
 
 # ---------------------------------------------------------
-# GLOBAL LAYOUT + TAB CENTERING (FINAL, SAFE)
+# CORPORATE CLEAN CSS + SAFE TAB CENTERING
 # ---------------------------------------------------------
 st.markdown(
     """
     <style>
 
-    /* ================================
-       GLOBAL PAGE STYLE
-       ================================ */
     body {
         background-color: #f5f6f8;
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     }
 
-    /* ================================
-       CENTER THE ENTIRE APP CONTENT
-       ================================ */
-    section.main > div {
-        max-width: 1400px;
-        margin-left: auto;
-        margin-right: auto;
-        padding-left: 2rem;
-        padding-right: 2rem;
-    }
-
-    /* ================================
-       HEADER
-       ================================ */
     .main-title {
         text-align: center;
         padding: 20px 0 5px 0;
@@ -54,54 +37,66 @@ st.markdown(
     .subtitle {
         text-align: center;
         color: #555;
-        margin-bottom: 20px;
+        margin-bottom: 15px;
     }
 
-    /* ================================
-       PREMIUM CENTERED TAB BAR
-       ================================ */
-    div[data-testid="stTabs"] > div[role="tablist"] {
-        display: flex;
-        justify-content: center;
-        gap: 28px;
-        border-bottom: 2px solid #e5e7eb;
-        padding-bottom: 6px;
-        margin-bottom: 30px;
+    .fs-card {
+        background: #ffffff;
+        padding: 22px;
+        border-radius: 10px;
+        border: 1px solid #e2e6ea;
+        margin-bottom: 22px;
+        box-shadow: 0 2px 5px rgba(15,23,42,0.03);
     }
 
-    div[data-testid="stTabs"] button[role="tab"] {
-        background: transparent;
-        border: none;
-        font-size: 15px;
+    /* Section header bars */
+    .section-header {
+        padding: 10px 16px;
+        border-radius: 6px;
+        color: white;
         font-weight: 600;
+        margin-bottom: 14px;
+        font-size: 18px;
+    }
+    .section-blue { background: #2563eb; }
+    .section-purple { background: #6d28d9; }
+    .section-orange { background: #ea580c; }
+    .section-green { background: #16a34a; }
+    .section-red { background: #b91c1c; }
+    .section-grey { background: #4b5563; }
+
+    /* URL Input Style */
+    .stTextInput > div > div > input {
+        font-size: 18px !important;
+        padding: 14px 16px !important;
+        height: 55px !important;
+        border-radius: 8px !important;
+        border: 1.6px solid #b0b8c4 !important;
+    }
+
+    /* Info box */
+    .info-box {
+        background: #eef2ff;
+        border-left: 4px solid #4f46e5;
+        padding: 10px 14px;
+        border-radius: 6px;
+        font-size: 14px;
         color: #374151;
-        padding: 10px 6px;
-        position: relative;
-        transition: all 0.25s ease;
+        margin-top: 8px;
     }
 
-    div[data-testid="stTabs"] button[role="tab"]:hover {
-        color: #2563eb;
+    .fs-footer {
+        text-align: center;
+        color: gray;
+        font-size: 13px;
+        margin-top: 40px;
     }
 
-    div[data-testid="stTabs"] button[role="tab"][aria-selected="true"] {
-        color: #dc2626;
-    }
-
-    div[data-testid="stTabs"] button[role="tab"][aria-selected="true"]::after {
-        content: "";
-        position: absolute;
-        left: 0;
-        bottom: -8px;
-        width: 100%;
-        height: 3px;
-        background: #dc2626;
-        border-radius: 3px;
-    }
-
-    div[data-testid="stTabs"] button:focus {
-        outline: none;
-        box-shadow: none;
+    /* =====================================================
+       ✅ SAFE TAB CENTERING (DO NOT TOUCH PARENTS)
+       ===================================================== */
+    div[data-testid="stTabs"] div[role="tablist"] {
+        justify-content: center !important;
     }
 
     </style>
@@ -144,8 +139,9 @@ def map_risk_style(risk_class: str, blacklist_flag: int = 0):
 
     return "❓ Unknown", "#95a5a6"
 
+
 # ---------------------------------------------------------
-# TABS (NOW PERFECTLY CENTERED)
+# TABS (CENTERED)
 # ---------------------------------------------------------
 tab_scanner, tab_model, tab_api, tab_threats, tab_arch, tab_logic = st.tabs(
     [
@@ -157,6 +153,7 @@ tab_scanner, tab_model, tab_api, tab_threats, tab_arch, tab_logic = st.tabs(
         "Risk Scoring Logic",
     ]
 )
+
 
 
 
@@ -1857,6 +1854,7 @@ st.markdown(
     "<p class='fs-footer'>FraudShield — Professional Real-Time Website Risk Evaluation</p>",
     unsafe_allow_html=True,
 )
+
 
 
 
