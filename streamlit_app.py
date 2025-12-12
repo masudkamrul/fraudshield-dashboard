@@ -92,28 +92,27 @@ st.markdown(
         margin-top: 40px;
     }
         /* =====================================================
-       ✅ TRUE CENTERED TAB BAR (FINAL FIX)
+       ✅ CENTER TAB BAR ONLY (DOES NOT AFFECT CONTENT)
        ===================================================== */
-
-    /* Center the entire tabs container */
+    
+    /* Keep full-width container intact */
     div[data-testid="stTabs"] {
-        display: flex;
-        justify-content: center;
+        width: 100%;
     }
-
-    /* Constrain tab width and center it */
+    
+    /* Center ONLY the tab buttons row */
     div[data-testid="stTabs"] > div[role="tablist"] {
         display: flex;
         justify-content: center;
         gap: 28px;
-
+    
         max-width: 900px;
-        width: fit-content;
-
+        margin: 0 auto 18px auto;
+    
         border-bottom: 2px solid #e5e7eb;
         padding-bottom: 6px;
-        margin-bottom: 18px;
     }
+
 
 
     </style>
@@ -1870,6 +1869,7 @@ st.markdown(
     "<p class='fs-footer'>FraudShield — Professional Real-Time Website Risk Evaluation</p>",
     unsafe_allow_html=True,
 )
+
 
 
 
