@@ -18,7 +18,7 @@ st.set_page_config(
 )
 
 # ---------------------------------------------------------
-# CORPORATE CLEAN CSS + PREMIUM CENTERED TAB BAR (FINAL)
+# CORPORATE CLEAN CSS
 # ---------------------------------------------------------
 st.markdown(
     """
@@ -65,7 +65,7 @@ st.markdown(
     .section-red { background: #b91c1c; }
     .section-grey { background: #4b5563; }
 
-    /* URL Input Style */
+    /* URL Input Style - scanner */
     .stTextInput>div>div>input {
         font-size: 18px !important;
         padding: 14px 16px !important;
@@ -92,70 +92,6 @@ st.markdown(
         margin-top: 40px;
     }
 
-    /* =====================================================
-       ✅ TRUE CENTERED TAB BAR (FINAL FIX)
-       ===================================================== */
-
-    /* Center the entire tabs container */
-    div[data-testid="stTabs"] {
-        display: flex;
-        justify-content: center;
-    }
-
-    /* Constrain tab width and center it */
-    div[data-testid="stTabs"] > div[role="tablist"] {
-        display: flex;
-        justify-content: center;
-        gap: 28px;
-
-        max-width: 900px;
-        width: fit-content;
-
-        border-bottom: 2px solid #e5e7eb;
-        padding-bottom: 6px;
-        margin-bottom: 18px;
-    }
-
-    /* Tab buttons */
-    div[data-testid="stTabs"] button[role="tab"] {
-        background: transparent;
-        border: none;
-        font-size: 15px;
-        font-weight: 600;
-        color: #374151;
-        padding: 10px 6px;
-        position: relative;
-        transition: all 0.25s ease;
-    }
-
-    /* Hover */
-    div[data-testid="stTabs"] button[role="tab"]:hover {
-        color: #2563eb;
-    }
-
-    /* Active tab */
-    div[data-testid="stTabs"] button[role="tab"][aria-selected="true"] {
-        color: #dc2626;
-    }
-
-    /* Active underline */
-    div[data-testid="stTabs"] button[role="tab"][aria-selected="true"]::after {
-        content: "";
-        position: absolute;
-        left: 0;
-        bottom: -8px;
-        width: 100%;
-        height: 3px;
-        background: #dc2626;
-        border-radius: 3px;
-    }
-
-    /* Remove focus ring */
-    div[data-testid="stTabs"] button:focus {
-        outline: none;
-        box-shadow: none;
-    }
-
     </style>
     """,
     unsafe_allow_html=True
@@ -164,21 +100,22 @@ st.markdown(
 # ---------------------------------------------------------
 # HEADER
 # ---------------------------------------------------------
-st.markdown(
-    "<h1 class='main-title'>🛡️ FraudShield – Website Risk Evaluation Dashboard</h1>",
-    unsafe_allow_html=True
-)
-
+st.markdown("<h1 class='main-title'>🛡️ FraudShield – Website Risk Evaluation Dashboard</h1>", unsafe_allow_html=True)
 st.markdown(
     "<p class='subtitle'>Professional interface to demonstrate how FraudShield evaluates website safety using machine learning and security signals.</p>",
     unsafe_allow_html=True
 )
 
 # ---------------------------------------------------------
-# RISK CLASS → LABEL + COLOR
+# RISK CLASS → LABEL + COLOR (MATCHES EXTENSION)
 # ---------------------------------------------------------
 def map_risk_style(risk_class: str, blacklist_flag: int = 0):
+    """
+    Map backend risk_class + blacklist flag to the same
+    labels & colors used in the Chrome extension.
+    """
 
+    # Blacklisted overrides everything
     if blacklist_flag:
         return "☠️ Blacklisted Threat", "#B71C1C"
 
@@ -194,6 +131,7 @@ def map_risk_style(risk_class: str, blacklist_flag: int = 0):
     if risk_class == "High Risk":
         return "🔴 High Risk", "#F44336"
 
+    # Fallback
     return "❓ Unknown", "#95a5a6"
 
 
@@ -210,6 +148,7 @@ tab_scanner, tab_model, tab_api, tab_threats, tab_arch, tab_logic = st.tabs(
         "Risk Scoring Logic",
     ]
 )
+
 
 
 
@@ -1907,6 +1846,7 @@ st.markdown(
     "<p class='fs-footer'>FraudShield — Professional Real-Time Website Risk Evaluation</p>",
     unsafe_allow_html=True,
 )
+
 
 
 
