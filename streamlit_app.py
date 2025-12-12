@@ -153,20 +153,20 @@ tab_scanner, tab_model, tab_api, tab_threats, tab_arch, tab_logic = st.tabs(
 
 
 
-
+# =========================================================
+#  TAB SCANNER
+# =========================================================
 
 with tab_scanner:
     import streamlit.components.v1 as components
 
     hero_html = """
     <style>
-        body { margin: 0; }
-
         .hero {
             background: linear-gradient(90deg, #1F4E79, #1C6FB5);
-            padding: 80px 20px;
+            padding: 80px 20px 90px;
             text-align: center;
-            border-radius: 10px;
+            border-radius: 12px;
         }
 
         .hero h1 {
@@ -188,7 +188,7 @@ with tab_scanner:
             background: white;
             border-radius: 8px;
             overflow: hidden;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.25);
         }
 
         .scan-box input {
@@ -213,10 +213,37 @@ with tab_scanner:
             background: #166d9c;
         }
 
-        .result {
-            margin-top: 30px;
-            font-size: 18px;
+        .result-box {
+            margin-top: 35px;
+            max-width: 520px;
+            margin-left: auto;
+            margin-right: auto;
+            background: rgba(255,255,255,0.12);
+            padding: 18px 22px;
+            border-radius: 10px;
             color: white;
+            display: none;
+        }
+
+        .risk-badge {
+            font-size: 22px;
+            font-weight: 700;
+            margin-bottom: 12px;
+        }
+
+        .progress-bg {
+            width: 100%;
+            background: rgba(255,255,255,0.25);
+            border-radius: 10px;
+            overflow: hidden;
+            height: 14px;
+            margin-top: 8px;
+        }
+
+        .progress-bar {
+            height: 14px;
+            width: 0%;
+            transition: width 1s ease;
         }
     </style>
 
@@ -229,18 +256,33 @@ with tab_scanner:
             <button onclick="scan()">SCAN NOW</button>
         </div>
 
-        <div id="result" class="result"></div>
+        <div id="resultBox" class="result-box">
+            <div id="riskBadge" class="risk-badge"></div>
+            <div id="scoreText"></div>
+            <div class="progress-bg">
+                <div id="progressBar" class="progress-bar"></div>
+            </div>
+        </div>
     </div>
 
     <script>
+        function getColor(risk) {
+            if (risk === "Safe") return "#4CAF50";
+            if (risk === "Low Risk") return "#FFC107";
+            if (risk === "Suspicious") return "#FF9800";
+            if (risk === "High Risk") return "#F44336";
+            return "#B71C1C";
+        }
+
         async function scan() {
             const url = document.getElementById("url").value;
-            if (!url) {
-                document.getElementById("result").innerText = "Please enter a valid URL.";
-                return;
-            }
+            if (!url) return;
 
-            document.getElementById("result").innerText = "Scanning...";
+            const resultBox = document.getElementById("resultBox");
+            resultBox.style.display = "block";
+            document.getElementById("riskBadge").innerText = "Scanning…";
+            document.getElementById("scoreText").innerText = "";
+            document.getElementById("progressBar").style.width = "0%";
 
             try {
                 const res = await fetch(
@@ -248,24 +290,36 @@ with tab_scanner:
                     {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ url: url })
+                        body: JSON.stringify({ url })
                     }
                 );
 
                 const data = await res.json();
 
-                document.getElementById("result").innerText =
-                    `Risk: ${data.risk_class} | Score: ${data.risk_score}/100`;
+                const risk = data.risk_class;
+                const score = Number(data.risk_score).toFixed(2); // %
+                const color = getColor(risk);
+
+                document.getElementById("riskBadge").innerText = "Risk: " + risk;
+                document.getElementById("riskBadge").style.color = color;
+
+                document.getElementById("scoreText").innerHTML =
+                    "Risk Score: <strong>" + score + "%</strong>";
+
+                const bar = document.getElementById("progressBar");
+                bar.style.background = color;
+                bar.style.width = score + "%";
 
             } catch (e) {
-                document.getElementById("result").innerText =
+                document.getElementById("riskBadge").innerText =
                     "Scan failed. Please try again.";
             }
         }
     </script>
     """
 
-    components.html(hero_html, height=420)
+    components.html(hero_html, height=520)
+
 
 
 
@@ -669,6 +723,7 @@ st.markdown(
     "<p class='fs-footer'>FraudShield — Professional Real-Time Website Risk Evaluation</p>",
     unsafe_allow_html=True,
 )
+
 
 
 
