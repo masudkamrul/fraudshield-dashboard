@@ -1,195 +1,166 @@
 import streamlit as st
-import requests
+import plotly.graph_objects as go
 import pandas as pd
-import time
-from fpdf import FPDF
-
-# -----------------------------------------------------
-# PAGE CONFIG (Theme + Title)
-# -----------------------------------------------------
-st.set_page_config(
-    page_title="FraudShield – Risk Evaluation Dashboard",
-    page_icon="🛡️",
-    layout="centered",
-    initial_sidebar_state="collapsed"
+from utils import (
+    run_fraudshield_scan,
+    update_log,
+    generate_pdf_report,
+    get_example_website_table
 )
 
-# Custom CSS for professional theme
-st.markdown("""
-<style>
-    .main {background-color: #F5F7FA;}
-    .title {color: #0A3D62; font-weight:700; font-size:36px; text-align:center;}
-    .subtitle {color: #3C6382; font-size:18px; text-align:center;}
-    .section-header {color:#0A3D62; font-size:26px; margin-top:25px;}
-</style>
-""", unsafe_allow_html=True)
+# ---------------------------------------------------------
+# PAGE CONFIGURATION
+# ---------------------------------------------------------
+st.set_page_config(
+    page_title="FraudShield Dashboard",
+    layout="wide"
+)
 
-# -----------------------------------------------------
-# TOP LOGO + TITLE
-# -----------------------------------------------------
+# Optional logo at top
+st.markdown(
+    """
+    <div style="text-align:center;">
+        <img src="https://i.imgur.com/wQK3O0M.png" width="140">
+    </div>
+    """,
+    unsafe_allow_html=True
+)
 
-# (If you ever get a real logo file, we can add it. For now we simulate a logo)
-
-st.markdown("<p class='title'>🛡️ FraudShield Risk Evaluation Dashboard</p>", unsafe_allow_html=True)
-st.markdown("<p class='subtitle'>Machine-learning system for real-time website safety analysis</p>", unsafe_allow_html=True)
-
-API_URL = "https://website-risk-scorer-api.onrender.com/scan_url"   # ← YOUR API
+st.title("🛡️ FraudShield – Website Risk Evaluation Dashboard")
+st.write("Evaluate a website’s fraud risk using real-time machine learning scoring.")
 
 
-# -----------------------------------------------------
-# 1️⃣ URL SCANNER
-# -----------------------------------------------------
-st.markdown("<h3 class='section-header'>🔵 1. Website Risk Scanner</h3>", unsafe_allow_html=True)
+# ---------------------------------------------------------
+# 1️⃣ WEBSITE SCANNING SECTION
+# ---------------------------------------------------------
+st.header("🔍 Website Risk Scanner")
 
-url = st.text_input("Enter website URL", placeholder="https://example.com")
+col_input, col_button = st.columns([3, 1])
 
-scan_result = None  # store for PDF generation
+with col_input:
+    url = st.text_input("Enter URL to scan", placeholder="https://example.com")
 
-if st.button("Check Website"):
+with col_button:
+    run_scan = st.button("Scan")
+
+scan_response = None
+
+if run_scan:
     if not url:
-        st.warning("Please enter a URL.")
+        st.warning("Please enter a valid website URL.")
     else:
         with st.spinner("Analyzing website…"):
-            try:
-                response = requests.post(API_URL, json={"url": url}, timeout=10)
-                data = response.json()
-                scan_result = data
-            except Exception as e:
-                st.error("Could not connect to FraudShield API.")
-                st.stop()
+            scan_response = run_fraudshield_scan(url)
 
-        risk_class = data.get("risk_class", "Unknown")
-        risk_score = float(data.get("risk_score", 0))
-        blacklist_flag = data.get("blacklist_flag", 0)
+    if scan_response is None:
+        st.error("Could not connect to the FraudShield API.")
+    else:
+        risk_class = scan_response.get("risk_class", "Unknown")
+        risk_score = float(scan_response.get("risk_score", 0))
+        blacklist_flag = scan_response.get("blacklist_flag", 0)
 
-        # Output color selection
-        color = "#4CAF50"  # default safe
-        if risk_class == "Low Risk": color = "#FFC107"
-        elif risk_class == "Suspicious": color = "#FF9800"
-        elif risk_class == "High Risk": color = "#F44336"
-        if blacklist_flag: color = "#B71C1C"
+        # -------------------------------------------
+        #  Gauge Visualization
+        # -------------------------------------------
+        st.subheader("Risk Score Overview")
 
-        # Display card
-        st.markdown(
-            f"""
-            <div style="padding:15px;border-radius:12px;background-color:{color};
-            color:white;text-align:center;font-size:20px;">
-                <strong>{risk_class}</strong><br>
-                Risk Score: {risk_score:.2f}%
-            </div>
-            """,
-            unsafe_allow_html=True
+        fig = go.Figure(
+            go.Indicator(
+                mode="gauge+number",
+                value=risk_score,
+                gauge={
+                    "axis": {"range": [0, 100]},
+                    "steps": [
+                        {"range": [0, 40], "color": "green"},
+                        {"range": [40, 70], "color": "yellow"},
+                        {"range": [70, 100], "color": "red"}
+                    ],
+                    "bar": {"color": "black"},
+                },
+                title={"text": f"Risk Level: {risk_class}"}
+            )
+        )
+        st.plotly_chart(fig, use_container_width=True)
+
+        # Update session log
+        update_log(st.session_state, url, risk_class)
+
+        # -------------------------------------------
+        #  PDF REPORT DOWNLOAD
+        # -------------------------------------------
+        st.subheader("📄 Download FraudShield Report")
+
+        pdf_bytes = generate_pdf_report(url, risk_class, risk_score)
+
+        st.download_button(
+            label="Download PDF Report",
+            data=pdf_bytes,
+            file_name="fraudshield_report.pdf",
+            mime="application/pdf"
         )
 
-        if blacklist_flag:
-            st.error("⚠️ This website is flagged as a **Blacklisted Threat**.")
-
-        # Save activity log
-        if "log" not in st.session_state:
-            st.session_state["log"] = []
-        st.session_state["log"].append(
-            {"time": time.strftime("%H:%M:%S"), "url": url, "result": risk_class}
-        )
+        # -------------------------------------------
+        #  BLACKLIST WARNING
+        # -------------------------------------------
+        if blacklist_flag == 1:
+            st.error("⚠ This website is listed on known threat/blacklist sources.")
 
 
-# -----------------------------------------------------
-# 2️⃣ EXAMPLE EVALUATIONS
-# -----------------------------------------------------
-st.markdown("<h3 class='section-header'>🟣 2. Example Website Evaluations</h3>", unsafe_allow_html=True)
+# ---------------------------------------------------------
+# 2️⃣ EXAMPLE WEBSITE EVALUATIONS
+# ---------------------------------------------------------
+st.header("🟣 Example Website Evaluations")
 
-sample_data = pd.DataFrame([
-    ["amazon.com", "Safe"],
-    ["ebay.com", "Low Risk"],
-    ["cheapshop247.net", "High Risk"],
-    ["brand-outlet-deals.biz", "Suspicious"],
-    ["newtechstore.xyz", "High Risk"],
-], columns=["Website", "Classification"])
-
-st.table(sample_data)
+example_df = get_example_website_table()
+st.table(example_df)
 
 
-# -----------------------------------------------------
-# 3️⃣ MODEL PERFORMANCE
-# -----------------------------------------------------
-st.markdown("<h3 class='section-header'>🟡 3. Model Performance Overview</h3>", unsafe_allow_html=True)
+# ---------------------------------------------------------
+# 3️⃣ MODEL PERFORMANCE SECTION
+# ---------------------------------------------------------
+st.header("🟡 Model Performance Overview")
 
 col1, col2, col3 = st.columns(3)
 col1.metric("Accuracy", "95%")
-col2.metric("AUC", "0.805")
+col2.metric("AUC Score", "0.805")
 col3.metric("F1 Score", "0.91")
 
+st.write(
+    "These metrics reflect FraudShield’s ability to distinguish legitimate websites from deceptive ones."
+)
 
-# -----------------------------------------------------
-# 4️⃣ FEATURE IMPORTANCE
-# -----------------------------------------------------
-st.markdown("<h3 class='section-header'>🟠 4. Feature Importance</h3>", unsafe_allow_html=True)
 
-feat_data = pd.DataFrame({
-    "Feature": ["Domain Age", "SSL Security", "Threatlist Match", "Suspicious Keywords", "Hosting Signals"],
+# ---------------------------------------------------------
+# 4️⃣ FEATURE IMPORTANCE (STATIC DEMO)
+# ---------------------------------------------------------
+st.header("🟠 Feature Importance")
+
+feature_df = pd.DataFrame({
+    "Feature": ["Domain Age", "SSL Validity", "Threatlist Match", "Keyword Patterns", "Hosting Signals"],
     "Importance": [0.31, 0.24, 0.18, 0.12, 0.07]
 })
-st.bar_chart(feat_data.set_index("Feature"))
+
+st.bar_chart(feature_df.set_index("Feature"))
 
 
-# -----------------------------------------------------
-# 5️⃣ BACKEND ACTIVITY LOG
-# -----------------------------------------------------
-st.markdown("<h3 class='section-header'>🟤 5. Recent Activity Log</h3>", unsafe_allow_html=True)
+# ---------------------------------------------------------
+# 5️⃣ ACTIVITY LOG
+# ---------------------------------------------------------
+st.header("🟤 Recent Scans (Activity Log)")
 
-if "log" in st.session_state and len(st.session_state["log"]) > 0:
-    st.table(pd.DataFrame(st.session_state["log"]))
+if "history" in st.session_state and len(st.session_state["history"]) > 0:
+    st.dataframe(pd.DataFrame(st.session_state["history"]))
 else:
-    st.info("No recent evaluations recorded.")
+    st.write("No scans recorded yet.")
 
 
-# -----------------------------------------------------
+# ---------------------------------------------------------
 # 6️⃣ HOW FRAUDSHIELD WORKS
-# -----------------------------------------------------
-st.markdown("<h3 class='section-header'>🟢 6. How FraudShield Works</h3>", unsafe_allow_html=True)
+# ---------------------------------------------------------
+st.header("🧠 How FraudShield Works")
 
 st.write("""
-FraudShield analyzes multiple website signals including:
-
-- Domain age & registration trust  
-- SSL security & HTTPS integrity  
-- Known threatlist matches  
-- Hosting risk indicators  
-- Keyword-based scam signatures  
-- Behavioral and metadata consistency  
-
-The backend model converts these into a **risk score** and **risk classification**, delivered instantly through the API.
+FraudShield evaluates websites using a combination of domain intelligence, 
+security indicators, threat intelligence, metadata signals, and machine learning scoring.  
+The output is a **risk score** and **classification** that help users make safer decisions.
 """)
-
-
-# -----------------------------------------------------
-# 7️⃣ DOWNLOAD RISK REPORT (PDF)
-# -----------------------------------------------------
-st.markdown("<h3 class='section-header'>📄 7. Download Website Report (PDF)</h3>", unsafe_allow_html=True)
-
-def generate_pdf(url, result):
-    pdf = FPDF()
-    pdf.add_page()
-
-    pdf.set_font("Arial", "B", 16)
-    pdf.cell(0, 10, "FraudShield Risk Report", ln=True)
-
-    pdf.set_font("Arial", size=12)
-    pdf.cell(0, 10, f"Website: {url}", ln=True)
-    pdf.cell(0, 10, f"Risk Class: {result.get('risk_class')}", ln=True)
-    pdf.cell(0, 10, f"Risk Score: {result.get('risk_score')}%", ln=True)
-    pdf.cell(0, 10, f"Blacklisted: {result.get('blacklist_flag')}", ln=True)
-    pdf.ln(10)
-    pdf.multi_cell(0, 8, "This automated report was generated using the FraudShield ML model.")
-
-    return pdf.output(dest="S").encode("latin-1")
-
-if scan_result:
-    pdf_data = generate_pdf(url, scan_result)
-    st.download_button(
-        label="📥 Download Report as PDF",
-        data=pdf_data,
-        file_name="fraudshield_report.pdf",
-        mime="application/pdf"
-    )
-else:
-    st.info("Run a scan first to download a report.")
