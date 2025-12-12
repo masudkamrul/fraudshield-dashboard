@@ -715,9 +715,7 @@ Key distinguishing characteristics include:
 
 
 
-# =========================================================
-# 3️⃣ API EXPLORER TAB
-# =========================================================
+
 # =========================================================
 # 3️⃣ API EXPLORER TAB (UPGRADED FOR ENTERPRISE DEMO)
 # =========================================================
@@ -1050,7 +1048,7 @@ normally use the platform.
 
 
 # =========================================================
-# 4️⃣ THREAT CATEGORIES TAB
+# 4️⃣ THREAT CATEGORIES TAB (UPGRADED: PLATFORM SAFETY TAXONOMY)
 # =========================================================
 with tab_threats:
     st.markdown("<div class='fs-card'>", unsafe_allow_html=True)
@@ -1058,50 +1056,208 @@ with tab_threats:
 
     st.write(
         """
-In addition to a numeric score, FraudShield interprets security signals into
-higher-level threat categories. These labels help non-technical users quickly
-understand the nature of the risk.
+FraudShield does more than output a numeric risk score. It also maps observed trust and safety
+signals into **human-readable threat categories**. This makes the system usable for
+non-technical stakeholders and enables clear platform actions such as warnings, badges, or moderation.
         """
     )
 
-    categories = pd.DataFrame(
+    st.markdown("---")
+
+    # -----------------------------------------------------
+    # THREAT TAXONOMY TABLE (CATEGORY + SEVERITY + ACTIONS)
+    # -----------------------------------------------------
+    st.markdown("### 🧭 Threat Taxonomy (Category → Meaning → Recommended Action)")
+
+    taxonomy = pd.DataFrame(
         [
             {
                 "Threat Category": "Safe",
-                "Description": "Signals are consistent with a legitimate, well-configured website.",
+                "Severity": "✅ Minimal",
+                "What It Means": "The website appears consistent with legitimate infrastructure and baseline security expectations.",
+                "Recommended Platform Action": "Allow normal navigation. Optional: show a green trust badge."
+            },
+            {
+                "Threat Category": "Low Risk",
+                "Severity": "🟡 Low",
+                "What It Means": "Minor concerns or limited history. Not clearly malicious, but caution is appropriate for transactions.",
+                "Recommended Platform Action": "Allow navigation. Optional: display a “Low Risk” badge; encourage cautious checkout."
             },
             {
                 "Threat Category": "Young Domain Risk",
-                "Description": "Recently registered domain with limited history; monitored for abuse.",
+                "Severity": "🟠 Elevated",
+                "What It Means": "Recently registered domain with limited reputation history; frequently associated with short-lived scam campaigns.",
+                "Recommended Platform Action": "Show a caution banner. For commerce links, recommend verifying seller identity before paying."
             },
             {
                 "Threat Category": "New Domain Fraud Risk",
-                "Description": "Very young domains and elevated risk scores, often seen in short-lived scam shops.",
+                "Severity": "🔶 High",
+                "What It Means": "Very new domains combined with stronger warning signals—commonly seen in fake storefronts and deceptive product pages.",
+                "Recommended Platform Action": "Show interstitial warning page. Consider flagging the link for moderation review."
             },
             {
                 "Threat Category": "Weak Transport Security",
-                "Description": "Lack of HTTPS or critical SSL issues, exposing users to interception.",
+                "Severity": "🔶 High",
+                "What It Means": "Missing or weak HTTPS/SSL protection increases interception risk, especially for logins or payments.",
+                "Recommended Platform Action": "Warn users before entering sensitive data. For payments, recommend avoiding the site."
             },
             {
                 "Threat Category": "Mixed Content Exploitation Risk",
-                "Description": "HTTPS pages loading insecure HTTP resources, which attackers can tamper with.",
-            },
-            {
-                "Threat Category": "High Fraud Likelihood",
-                "Description": "Multiple negative signals and a high model score strongly indicate fraud.",
+                "Severity": "🟠 Elevated",
+                "What It Means": "The page loads insecure resources which can be modified in transit, creating script injection and content tampering risk.",
+                "Recommended Platform Action": "Warn users. Allow navigation but caution against entering credentials or payment details."
             },
             {
                 "Threat Category": "Moderate Fraud Indicators",
-                "Description": "Some warning signs present; caution recommended for transactions.",
+                "Severity": "🟠 Elevated",
+                "What It Means": "Multiple caution signals are present. The website may be deceptive or unsafe for commercial activity.",
+                "Recommended Platform Action": "Show warning banner or interstitial. Consider risk-based friction (extra confirmation click)."
+            },
+            {
+                "Threat Category": "High Fraud Likelihood",
+                "Severity": "🔴 Critical",
+                "What It Means": "The website exhibits strong patterns consistent with fraudulent behavior (e.g., scam storefront indicators).",
+                "Recommended Platform Action": "Strong interstitial warning. Recommend users do not proceed. Queue link for moderation."
             },
             {
                 "Threat Category": "Phishing/Malware Source",
-                "Description": "Known phishing or malware distribution, based on blacklist hits.",
+                "Severity": "☠️ Severe",
+                "What It Means": "The domain is flagged by threat intelligence sources as malicious (phishing or malware distribution).",
+                "Recommended Platform Action": "Block by default. Present a high-severity warning. Remove or quarantine the link."
             },
         ]
     )
 
-    st.table(categories)
+    st.table(taxonomy)
+
+    st.markdown("---")
+
+    # -----------------------------------------------------
+    # REAL-WORLD EXAMPLES (NON-TECHNICAL, BUSINESS-FACING)
+    # -----------------------------------------------------
+    st.markdown("### 🌍 Real-World Examples (Why These Categories Matter)")
+
+    examples = pd.DataFrame(
+        [
+            {
+                "Scenario": "Portfolio link to an external store",
+                "Potential Risk": "A fake storefront imitates legitimate brands and collects payments without delivery",
+                "FraudShield Category": "New Domain Fraud Risk / High Fraud Likelihood",
+                "Impact": "Prevents user harm and protects platform reputation"
+            },
+            {
+                "Scenario": "Service booking link on a profile",
+                "Potential Risk": "A spoofed booking page requests deposits or personal data",
+                "FraudShield Category": "Moderate Fraud Indicators / Phishing Risk",
+                "Impact": "Reduces scams targeting consumers through trusted profiles"
+            },
+            {
+                "Scenario": "“Contact me” link directing to login form",
+                "Potential Risk": "Credential harvesting (phishing) disguised as messaging or sign-in",
+                "FraudShield Category": "Phishing/Malware Source (if flagged) or High Fraud Likelihood",
+                "Impact": "Prevents account compromise and downstream fraud"
+            },
+            {
+                "Scenario": "External tool link for a small business",
+                "Potential Risk": "Weak HTTPS or mixed content causes data leakage risk",
+                "FraudShield Category": "Weak Transport Security / Mixed Content Risk",
+                "Impact": "Improves safety posture even when content is not malicious"
+            },
+        ]
+    )
+
+    st.table(examples)
+
+    st.markdown("---")
+
+    # -----------------------------------------------------
+    # ACTION POLICY MATRIX (FINDME-READY)
+    # -----------------------------------------------------
+    st.markdown("### 🧩 Platform Action Policy Matrix (Recommended for FindMe)")
+
+    policy = pd.DataFrame(
+        [
+            {"Risk Tier": "Safe", "Badge": "Green badge", "UI Action": "No friction", "Moderation": "No"},
+            {"Risk Tier": "Low Risk", "Badge": "Yellow badge", "UI Action": "Soft caution", "Moderation": "No"},
+            {"Risk Tier": "Elevated", "Badge": "Orange badge", "UI Action": "Warning banner", "Moderation": "Optional"},
+            {"Risk Tier": "High", "Badge": "Red badge", "UI Action": "Interstitial warning + confirm", "Moderation": "Yes"},
+            {"Risk Tier": "Severe", "Badge": "Black/Red", "UI Action": "Block or quarantine link", "Moderation": "Yes (priority)"},
+        ]
+    )
+    st.table(policy)
+
+    st.markdown("---")
+
+    # -----------------------------------------------------
+    # USER-FACING MESSAGE TEMPLATES (VERY USEFUL FOR REAL PLATFORM)
+    # -----------------------------------------------------
+    st.markdown("### 🗣️ User Warning Message Templates (Ready to Use)")
+
+    msg_df = pd.DataFrame(
+        [
+            {
+                "Tier": "Low Risk",
+                "Suggested Message": "This link has limited trust history. Proceed with caution, especially for payments."
+            },
+            {
+                "Tier": "Elevated",
+                "Suggested Message": "This website shows warning signs. Avoid entering sensitive information unless you trust the source."
+            },
+            {
+                "Tier": "High",
+                "Suggested Message": "High-risk website detected. We recommend you do not proceed."
+            },
+            {
+                "Tier": "Severe",
+                "Suggested Message": "Dangerous website detected (phishing/malware risk). This link is blocked for your safety."
+            },
+        ]
+    )
+    st.table(msg_df)
+
+    st.markdown("---")
+
+    # -----------------------------------------------------
+    # TRANSPARENT TRIAGE LOGIC (ILLUSTRATIVE)
+    # -----------------------------------------------------
+    st.markdown("### 🧠 How Categories Are Assigned (High-Level, Interpretable)")
+
+    st.write(
+        """
+FraudShield uses an interpretable triage approach:  
+- **Threat intelligence flags** can override normal scoring (safety-first).  
+- Otherwise, risk categories align with the **risk score bands** and a small set of security signals.
+        """
+    )
+
+    st.code(
+        """
+if blacklist_flag == 1:
+    category = "Phishing/Malware Source"
+elif risk_score >= 80:
+    category = "High Fraud Likelihood"
+elif risk_score >= 60:
+    category = "Moderate Fraud Indicators"
+elif https_flag == 0:
+    category = "Weak Transport Security"
+elif mixed_content_ratio > 0:
+    category = "Mixed Content Exploitation Risk"
+elif domain_age_days < 30:
+    category = "New Domain Fraud Risk"
+elif domain_age_days < 180:
+    category = "Young Domain Risk"
+else:
+    category = "Safe / Low Risk"
+        """,
+        language="python",
+    )
+
+    st.markdown(
+        """
+This structure is intentionally designed to be **usable by platforms**: it supports
+consistent user messaging, moderation policies, and safety experiences.
+        """
+    )
 
     st.markdown("</div>", unsafe_allow_html=True)
 
@@ -1279,6 +1435,7 @@ st.markdown(
     "<p class='fs-footer'>FraudShield — Professional Real-Time Website Risk Evaluation</p>",
     unsafe_allow_html=True,
 )
+
 
 
 
