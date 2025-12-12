@@ -156,7 +156,7 @@ tab_scanner, tab_model, tab_api, tab_threats, tab_arch, tab_logic = st.tabs(
 
 
 # =========================================================
-# 1️⃣ SCANNER TAB — FINAL FIXED HERO SECTION
+# 1️⃣ SCANNER TAB — FIXED HERO + FUNCTIONAL BUTTON
 # =========================================================
 import streamlit as st
 import streamlit.components.v1 as components
@@ -243,56 +243,52 @@ with tab_scanner:
     </div>
 
     <script>
-    function submitFraudShieldScan() {
-        const url = document.getElementById("fs_url").value;
-    
-        if (!url || url.trim() === "") {
-            alert("Please enter a valid URL.");
-            return;
+        function submitFraudShieldScan() {
+            const url = document.getElementById("fs_url").value;
+
+            if (!url || url.trim() === "") {
+                alert("Please enter a valid URL.");
+                return;
+            }
+
+            const inputBox = document.getElementById("fs_hidden_input");
+            inputBox.value = url;
+            inputBox.dispatchEvent(new Event("input", { bubbles: true }));
+
+            const button = document.getElementById("fs_hidden_button");
+            button.click();
         }
-    
-        // Write into Streamlit hidden input
-        const hiddenInput = document.querySelector('#fs_hidden_input');
-        hiddenInput.value = url;
-        hiddenInput.dispatchEvent(new Event("input", { bubbles: true }));
-    
-        // Trigger Streamlit hidden button
-        const hiddenBtn = document.querySelector('#fs_hidden_button');
-        hiddenBtn.click();
-    }
     </script>
     """
 
-    # 🚀 Render HTML correctly (prevents escaping)
     components.html(hero_html, height=350)
 
-
     # ---------------- HIDDEN STREAMLIT FORM ----------------
-        with st.form("fraudshield_hidden_form"):
-            hidden_url = st.text_input(
-                "", 
-                key="fs_hidden_url", 
-                label_visibility="collapsed"
-            )
-        
-            run_scan = st.form_submit_button(
-                "SCAN NOW",
-                help="hidden scan button",
-                kwargs={},
-                type="primary"
-            )
-        
-        # VERY IMPORTANT: Give them HTML IDs after rendering
-        st.markdown("""
-        <script>
-        document.querySelector('input[id="fs_hidden_url"]').setAttribute('id', 'fs_hidden_input');
-        document.querySelector('button[aria-label="SCAN NOW"]').setAttribute('id', 'fs_hidden_button');
-        </script>
-        """, unsafe_allow_html=True)
+    st.write("")  # add small spacing
 
+    with st.form("hidden_scan_form"):
+        # hidden input for JS
+        hidden_url = st.text_input(
+            "",
+            key="fs_hidden_url",
+            label_visibility="collapsed"
+        )
 
+        # hidden submit button
+        run_scan = st.form_submit_button(
+            "SCAN NOW",
+            help="hidden-scan-button",
+        )
 
-    # ---------------- PROCESS THE SCAN ----------------
+    # Add DOM IDs so JS can find them
+    st.markdown("""
+    <script>
+    document.querySelector('input[id="fs_hidden_url"]').setAttribute('id','fs_hidden_input');
+    document.querySelector('button[aria-label="SCAN NOW"]').setAttribute('id','fs_hidden_button');
+    </script>
+    """, unsafe_allow_html=True)
+
+    # ---------------- PROCESS SCAN ----------------
     if run_scan:
         if not hidden_url.strip():
             st.error("Please enter a valid URL.")
@@ -326,6 +322,7 @@ with tab_scanner:
                     unsafe_allow_html=True
                 )
 
+                # gauge visualization
                 fig = go.Figure(
                     go.Indicator(
                         mode="gauge+number",
@@ -346,6 +343,7 @@ with tab_scanner:
 
                 st.success(f"Risk Score: **{risk_score} / 100** — {label}")
                 st.write(f"Scanned Website: **{hidden_url}**")
+
 
 
 
@@ -743,6 +741,7 @@ st.markdown(
     "<p class='fs-footer'>FraudShield — Professional Real-Time Website Risk Evaluation</p>",
     unsafe_allow_html=True,
 )
+
 
 
 
