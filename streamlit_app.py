@@ -156,14 +156,15 @@ tab_scanner, tab_model, tab_api, tab_threats, tab_arch, tab_logic = st.tabs(
 
 
 # =========================================================
-# 1️⃣ SCANNER TAB — FIXED HERO + FUNCTIONAL BUTTON
+# 1️⃣ SCANNER TAB — BLUE BUTTON ONLY, FULLY WORKING
 # =========================================================
 import streamlit as st
 import streamlit.components.v1 as components
+import json
 
 with tab_scanner:
 
-    # ---------------- HERO + SCANNER HTML ----------------
+    # ---------------- HERO HTML BLOCK ----------------
     hero_html = """
     <style>
         .hero-section {
@@ -237,123 +238,96 @@ with tab_scanner:
         <div class="scan-container">
             <div class="scan-box">
                 <input type="text" id="fs_url" class="scan-input" placeholder="Enter your website domain">
-                <button class="scan-btn" onclick="submitFraudShieldScan()">SCAN NOW</button>
+                <button class="scan-btn" onclick="triggerScan()">SCAN NOW</button>
             </div>
         </div>
     </div>
 
     <script>
-        function submitFraudShieldScan() {
+        function triggerScan() {
             const url = document.getElementById("fs_url").value;
-
             if (!url || url.trim() === "") {
                 alert("Please enter a valid URL.");
                 return;
             }
-
-            const inputBox = document.getElementById("fs_hidden_input");
-            inputBox.value = url;
-            inputBox.dispatchEvent(new Event("input", { bubbles: true }));
-
-            const button = document.getElementById("fs_hidden_button");
-            button.click();
+            window.parent.postMessage({type: "fraudshield_scan", url: url}, "*");
         }
     </script>
     """
 
     components.html(hero_html, height=350)
 
-    # ---------------- HIDDEN STREAMLIT FORM ----------------
-    st.write("")  # add small spacing
+    # ---------------- LISTEN FOR JS MESSAGE ----------------
+    scan_trigger = st.experimental_get_query_params().get("scan", None)
 
-    with st.form("hidden_scan_form"):
-        hidden_url = st.text_input(
-            "",
-            key="fs_hidden_url",
-            label_visibility="collapsed"
-        )
-
-        run_scan = st.form_submit_button(
-            "SCAN NOW",
-            help="hidden-button",
-        )
-
-    # ---------------- FIX: STABLE DOM ID ATTACHMENT ----------------
+    # JS listener (loads once)
     st.markdown("""
     <script>
-    const observer = new MutationObserver(() => {
-        // Find the Streamlit hidden input
-        const inputElem = document.querySelector('input[aria-label=" "]');
-        const btnElem = document.querySelector('button[title="hidden-button"]');
-
-        if (inputElem && !inputElem.id) {
-            inputElem.id = "fs_hidden_input";
-        }
-
-        if (btnElem && !btnElem.id) {
-            btnElem.id = "fs_hidden_button";
-        }
-    });
-
-    observer.observe(document.body, { childList: true, subtree: true });
+        window.addEventListener("message", (event) => {
+            if (event.data.type === "fraudshield_scan") {
+                const newUrl = new URL(window.location);
+                newUrl.searchParams.set("scan", event.data.url);
+                window.location = newUrl;
+            }
+        });
     </script>
     """, unsafe_allow_html=True)
 
     # ---------------- PROCESS SCAN ----------------
-    if run_scan:
-        if not hidden_url.strip():
-            st.error("Please enter a valid URL.")
+    if scan_trigger:
+        target_url = scan_trigger[0]
+
+        st.info(f"🔍 Scanning: **{target_url}** ...")
+
+        with st.spinner("Running FraudShield website analysis..."):
+            scan_result = run_fraudshield_scan(target_url)
+
+        if not scan_result:
+            st.error("❌ Scan failed — API unreachable.")
         else:
-            with st.spinner("Scanning website…"):
-                scan_result = run_fraudshield_scan(hidden_url)
+            risk_class = scan_result.get("risk_class", "Unknown")
+            risk_score = float(scan_result.get("risk_score", 0))
+            blacklist_flag = scan_result.get("blacklist_flag", 0)
 
-            if not scan_result:
-                st.error("Scan failed — API unreachable.")
-            else:
-                risk_class = scan_result.get("risk_class", "Unknown")
-                risk_score = float(scan_result.get("risk_score", 0))
-                blacklist_flag = scan_result.get("blacklist_flag", 0)
+            label, color = map_risk_style(risk_class, blacklist_flag)
 
-                label, color = map_risk_style(risk_class, blacklist_flag)
+            st.markdown(
+                f"""
+                <div style="text-align:center;margin-top:25px;">
+                    <span style="
+                        background:{color};
+                        color:white;
+                        padding:14px 30px;
+                        border-radius:25px;
+                        font-size:24px;
+                        font-weight:600;">
+                        {label}
+                    </span>
+                </div>
+                """,
+                unsafe_allow_html=True
+            )
 
-                st.markdown(
-                    f"""
-                    <div style="text-align:center;margin-top:25px;">
-                        <span style="
-                            background:{color};
-                            color:white;
-                            padding:14px 30px;
-                            border-radius:25px;
-                            font-size:24px;
-                            font-weight:600;">
-                            {label}
-                        </span>
-                    </div>
-                    """,
-                    unsafe_allow_html=True
+            fig = go.Figure(
+                go.Indicator(
+                    mode="gauge+number",
+                    value=risk_score,
+                    gauge={
+                        "axis": {"range": [0, 100]},
+                        "bar": {"color": "black"},
+                        "steps": [
+                            {"range": [0, 40], "color": "#d4f6e4"},
+                            {"range": [40, 70], "color": "#fff3cd"},
+                            {"range": [70, 100], "color": "#f8d7da"},
+                        ],
+                    },
+                    number={"font": {"size": 48}}
                 )
+            )
+            st.plotly_chart(fig, use_container_width=True)
 
-                # gauge visualization
-                fig = go.Figure(
-                    go.Indicator(
-                        mode="gauge+number",
-                        value=risk_score,
-                        gauge={
-                            "axis": {"range": [0, 100]},
-                            "bar": {"color": "black"},
-                            "steps": [
-                                {"range": [0, 40], "color": "#d4f6e4"},
-                                {"range": [40, 70], "color": "#fff3cd"},
-                                {"range": [70, 100], "color": "#f8d7da"},
-                            ],
-                        },
-                        number={"font": {"size": 48}}
-                    )
-                )
-                st.plotly_chart(fig, use_container_width=True)
-
-                st.success(f"Risk Score: **{risk_score} / 100** — {label}")
-                st.write(f"Scanned Website: **{hidden_url}**")
+            st.success(f"Risk Score: **{risk_score} / 100** — {label}")
+            st.write(f"Scanned Website: **{target_url}**")
 
 
 
@@ -752,6 +726,7 @@ st.markdown(
     "<p class='fs-footer'>FraudShield — Professional Real-Time Website Risk Evaluation</p>",
     unsafe_allow_html=True,
 )
+
 
 
 
