@@ -149,27 +149,43 @@ tab_scanner, tab_model, tab_api, tab_threats, tab_arch, tab_logic = st.tabs(
     ]
 )
 
-# =========================================================
-# 1️⃣ SCANNER TAB
-# =========================================================
+
+###############################################
+# SCANNER TAB – FULL WORKING FINAL VERSION
+###############################################
+
 with tab_scanner:
 
-    # ------------------ CUSTOM STYLE ------------------
+    # ============================================================
+    # 1. CSS Styling — Hides Streamlit form & builds SiteLock UI
+    # ============================================================
     st.markdown("""
     <style>
+
+    /* Hide Streamlit’s internal input & button completely */
+    div[data-testid="stTextInput"] { 
+        display: none !important;
+    }
+    button[data-scan="hidden"] {
+        display: none !important;
+    }
+
+    /* --- Custom SiteLock-Style Scanner Bar --- */
     .scan-wrapper {
         width: 100%;
         display: flex;
         justify-content: center;
-        margin-top: 30px;
+        margin-top: 25px;
         margin-bottom: 20px;
     }
+
     .scan-box {
-        width: 650px;
+        width: 700px;
         max-width: 95%;
         display: flex;
         align-items: center;
     }
+
     .scan-input {
         flex: 1;
         padding: 16px 20px;
@@ -179,10 +195,11 @@ with tab_scanner:
         border-radius: 6px 0 0 6px;
         background: white;
     }
+
     .scan-btn {
         background: #1C89C9;
         color: white;
-        padding: 16px 30px;
+        padding: 16px 32px;
         font-size: 17px;
         font-weight: bold;
         border: none;
@@ -192,48 +209,116 @@ with tab_scanner:
     .scan-btn:hover {
         background: #166d9c;
     }
+
     </style>
     """, unsafe_allow_html=True)
 
-    # ------------------ VISIBLE SCAN BAR ------------------
+
+    # ============================================================
+    # 2. Visible Blue Scanner UI (HTML)
+    # ============================================================
     st.markdown("""
     <div class="scan-wrapper">
         <div class="scan-box">
-            <input type="text" id="fs_input" class="scan-input" placeholder="Enter your website domain" />
-            <button class="scan-btn" onclick="submitScan()">SCAN NOW</button>
+            <input type="text" id="fs_url" class="scan-input" placeholder="Enter website domain" />
+            <button class="scan-btn" onclick="submitFraudShieldScan()">SCAN NOW</button>
         </div>
     </div>
 
     <script>
-    function submitScan() {
-        const value = document.getElementById("fs_input").value;
+    function submitFraudShieldScan() {
+        const url = document.getElementById("fs_url").value;
+
+        // push value into Streamlit’s hidden input
         const hiddenInput = window.parent.document.querySelector('input[data-testid="stTextInput"]');
-        hiddenInput.value = value;
+        hiddenInput.value = url;
         hiddenInput.dispatchEvent(new Event("input", { bubbles: true }));
 
-        const submitBtn = window.parent.document.querySelector('button[data-scan="hidden"]');
-        submitBtn.click();
+        // click hidden submit button
+        const hiddenBtn = window.parent.document.querySelector('button[data-scan="hidden"]');
+        hiddenBtn.click();
     }
     </script>
     """, unsafe_allow_html=True)
 
-    # ------------------ HIDDEN STREAMLIT FORM ------------------
-    with st.form("hidden_scan_form"):
-        hidden_url = st.text_input("", key="hidden_url", label_visibility="collapsed")
-        submit = st.form_submit_button("SCAN NOW", type="primary", help="", disabled=False, kwargs={"data-scan": "hidden"})
 
-    # ------------------ RUN THE SCAN ------------------
-    if submit:
+    # ============================================================
+    # 3. Hidden Streamlit Form (Invisible)
+    # ============================================================
+    with st.form("fraudshield_hidden_form"):
+        hidden_url = st.text_input("", key="fs_hidden_url", label_visibility="collapsed")
+        run_scan = st.form_submit_button("SCAN NOW", kwargs={"data-scan": "hidden"})
+
+
+    # ============================================================
+    # 4. Run Scan & Display Results
+    # ============================================================
+    if run_scan:
         if not hidden_url.strip():
             st.error("Please enter a valid URL.")
         else:
-            with st.spinner("Scanning website..."):
-                result = run_fraudshield_scan(hidden_url)
+            with st.spinner("Scanning website…"):
+                scan_result = run_fraudshield_scan(hidden_url)
 
-            if result:
-                st.success("Scan Complete!")
+            if not scan_result:
+                st.error("Scan failed — API unreachable.")
             else:
-                st.error("Unable to reach API.")
+                # Extract results
+                risk_class = scan_result.get("risk_class", "Unknown")
+                risk_score = float(scan_result.get("risk_score", 0))
+                blacklist_flag = scan_result.get("blacklist_flag", 0)
+
+                # Map to extension-style label + color
+                label, color = map_risk_style(risk_class, blacklist_flag)
+
+                # ======================================================
+                # 4A. Risk Badge
+                # ======================================================
+                st.markdown(
+                    f"""
+                    <div style="text-align:center;margin-top:15px;">
+                        <span style="
+                            background:{color};
+                            color:white;
+                            padding:14px 30px;
+                            border-radius:25px;
+                            font-size:24px;
+                            font-weight:600;">
+                            {label}
+                        </span>
+                    </div>
+                    """,
+                    unsafe_allow_html=True
+                )
+
+                # ======================================================
+                # 4B. Gauge Chart
+                # ======================================================
+                fig = go.Figure(
+                    go.Indicator(
+                        mode="gauge+number",
+                        value=risk_score,
+                        gauge={
+                            "axis": {"range": [0, 100]},
+                            "bar": {"color": "black"},
+                            "steps": [
+                                {"range": [0, 40], "color": "#d4f6e4"},
+                                {"range": [40, 70], "color": "#fff3cd"},
+                                {"range": [70, 100], "color": "#f8d7da"},
+                            ],
+                        },
+                        number={"font": {"size": 48}}
+                    )
+                )
+                st.plotly_chart(fig, use_container_width=True)
+
+                # ======================================================
+                # 4C. Summary
+                # ======================================================
+                st.success(f"Risk Score: **{risk_score} / 100** — {label}")
+                st.write(f"Scanned Website: **{hidden_url}**")
+
+
 
 
 
@@ -620,6 +705,7 @@ st.markdown(
     "<p class='fs-footer'>FraudShield — Professional Real-Time Website Risk Evaluation</p>",
     unsafe_allow_html=True,
 )
+
 
 
 
