@@ -156,178 +156,183 @@ tab_scanner, tab_model, tab_api, tab_threats, tab_arch, tab_logic = st.tabs(
 
 
 # =========================================================
-# 1️⃣ SCANNER TAB — BLUE BUTTON ONLY, FULLY WORKING
+# 1️⃣ SCANNER TAB — CLEAN STREAMLIT VERSION (NO JS)
 # =========================================================
-import streamlit as st
-import streamlit.components.v1 as components
-import json
-
 with tab_scanner:
-
-    # ---------------- HERO HTML BLOCK ----------------
-    hero_html = """
-    <style>
-        .hero-section {
-            width: 100%;
+    # --------- Extra CSS to mimic SiteLock style ----------
+    st.markdown(
+        """
+        <style>
+        /* Hero background */
+        .fs-hero {
             background: linear-gradient(90deg, #1F4E79, #1C6FB5);
-            padding: 70px 20px 80px 20px;
-            text-align: center;
+            padding: 60px 20px 50px 20px;
             border-radius: 10px;
-            margin-bottom: 40px;
+            text-align: center;
+            margin-bottom: 30px;
         }
-
-        .hero-title {
-            color: white;
-            font-size: 38px;
+        .fs-hero-title {
+            color: #ffffff;
+            font-size: 36px;
             font-weight: 700;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
         }
-
-        .hero-subtitle {
+        .fs-hero-subtitle {
             color: #e2e8f0;
-            font-size: 18px;
-            margin-bottom: 35px;
-        }
-
-        .scan-container {
-            display: flex;
-            justify-content: center;
-            width: 100%;
-        }
-
-        .scan-box {
-            display: flex;
-            width: 720px;
-            max-width: 95%;
-            background: white;
-            border-radius: 8px;
-            overflow: hidden;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-        }
-
-        .scan-input {
-            flex: 1;
-            padding: 18px 20px;
-            font-size: 18px;
-            border: none;
-            outline: none;
-        }
-
-        .scan-btn {
-            background: #1C89C9;
-            border: none;
-            padding: 18px 28px;
             font-size: 17px;
-            color: white;
+            margin-bottom: 25px;
+        }
+
+        /* Make the Streamlit input look like a long white bar */
+        div[data-testid="stTextInput"] > div > div > input {
+            font-size: 18px;
+            padding: 16px 18px;
+            height: 54px;
+            border-radius: 4px 0 0 4px;
+            border: 1px solid #cbd5e1;
+            box-shadow: none;
+        }
+
+        /* Style the Scan button */
+        div[data-testid="stButton"] > button {
+            height: 54px;
+            font-size: 17px;
             font-weight: 700;
-            cursor: pointer;
-            white-space: nowrap;
+            border-radius: 0 4px 4px 0;
+            border: none;
+            background-color: #1C89C9;
+            color: white;
+            padding: 0 26px;
+        }
+        div[data-testid="stButton"] > button:hover {
+            background-color: #166d9c;
         }
 
-        .scan-btn:hover {
-            background: #166d9c;
+        /* Card-like container for results */
+        .fs-card {
+            background: #ffffff;
+            padding: 22px;
+            border-radius: 10px;
+            border: 1px solid #e2e6ea;
+            margin-top: 18px;
+            box-shadow: 0 2px 5px rgba(15,23,42,0.03);
         }
-    </style>
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
 
-    <div class="hero-section">
-        <div class="hero-title">Free Website Malware & Security Scanner</div>
-        <div class="hero-subtitle">
-            Enter a website to check for vulnerabilities, fraud signals, and security issues.
-        </div>
-
-        <div class="scan-container">
-            <div class="scan-box">
-                <input type="text" id="fs_url" class="scan-input" placeholder="Enter your website domain">
-                <button class="scan-btn" onclick="triggerScan()">SCAN NOW</button>
+    # ---------------- Hero header ----------------
+    st.markdown(
+        """
+        <div class="fs-hero">
+            <div class="fs-hero-title">Free Website Malware &amp; Security Scanner</div>
+            <div class="fs-hero-subtitle">
+                Enter a website to check for vulnerabilities, fraud signals, and security issues.
             </div>
         </div>
-    </div>
+        """,
+        unsafe_allow_html=True,
+    )
 
-    <script>
-        function triggerScan() {
-            const url = document.getElementById("fs_url").value;
-            if (!url || url.trim() === "") {
-                alert("Please enter a valid URL.");
-                return;
-            }
-            window.parent.postMessage({type: "fraudshield_scan", url: url}, "*");
-        }
-    </script>
-    """
+    # ---------------- Scanner row (text + button) ----------------
+    col_input, col_button = st.columns([6, 1])
 
-    components.html(hero_html, height=350)
+    with col_input:
+        url = st.text_input(
+            label="",
+            placeholder="Enter website URL (e.g., https://example.com)",
+            key="scanner_url",
+        )
 
-    # ---------------- LISTEN FOR JS MESSAGE ----------------
-    scan_trigger = st.experimental_get_query_params().get("scan", None)
+    with col_button:
+        scan_clicked = st.button("SCAN NOW", key="scan_button")
 
-    # JS listener (loads once)
-    st.markdown("""
-    <script>
-        window.addEventListener("message", (event) => {
-            if (event.data.type === "fraudshield_scan") {
-                const newUrl = new URL(window.location);
-                newUrl.searchParams.set("scan", event.data.url);
-                window.location = newUrl;
-            }
-        });
-    </script>
-    """, unsafe_allow_html=True)
-
-    # ---------------- PROCESS SCAN ----------------
-    if scan_trigger:
-        target_url = scan_trigger[0]
-
-        st.info(f"🔍 Scanning: **{target_url}** ...")
-
-        with st.spinner("Running FraudShield website analysis..."):
-            scan_result = run_fraudshield_scan(target_url)
-
-        if not scan_result:
-            st.error("❌ Scan failed — API unreachable.")
+    # ---------------- Run scan when button clicked ----------------
+    if scan_clicked:
+        if not url.strip():
+            st.error("Please provide a valid URL before scanning.")
         else:
-            risk_class = scan_result.get("risk_class", "Unknown")
-            risk_score = float(scan_result.get("risk_score", 0))
-            blacklist_flag = scan_result.get("blacklist_flag", 0)
+            with st.spinner("Analyzing website…"):
+                scan_result = run_fraudshield_scan(url)
 
-            label, color = map_risk_style(risk_class, blacklist_flag)
+            if not scan_result:
+                st.error("Unable to connect to FraudShield API.")
+            else:
+                risk_class = scan_result.get("risk_class", "Unknown")
+                risk_score = float(scan_result.get("risk_score", 0))
+                blacklist_flag = scan_result.get("blacklist_flag", 0)
 
-            st.markdown(
-                f"""
-                <div style="text-align:center;margin-top:25px;">
-                    <span style="
-                        background:{color};
-                        color:white;
-                        padding:14px 30px;
-                        border-radius:25px;
-                        font-size:24px;
-                        font-weight:600;">
-                        {label}
-                    </span>
-                </div>
-                """,
-                unsafe_allow_html=True
-            )
+                display_label, badge_color = map_risk_style(risk_class, blacklist_flag)
 
-            fig = go.Figure(
-                go.Indicator(
-                    mode="gauge+number",
-                    value=risk_score,
-                    gauge={
-                        "axis": {"range": [0, 100]},
-                        "bar": {"color": "black"},
-                        "steps": [
-                            {"range": [0, 40], "color": "#d4f6e4"},
-                            {"range": [40, 70], "color": "#fff3cd"},
-                            {"range": [70, 100], "color": "#f8d7da"},
-                        ],
-                    },
-                    number={"font": {"size": 48}}
+                # ------- Result card -------
+                st.markdown('<div class="fs-card">', unsafe_allow_html=True)
+
+                # Risk badge
+                st.markdown(
+                    f"""
+                    <div style="text-align:center; margin-bottom:10px;">
+                        <span style="
+                            background:{badge_color};
+                            color:white;
+                            padding:10px 22px;
+                            border-radius:18px;
+                            font-size:20px;
+                            font-weight:600;
+                            display:inline-block;">
+                            {display_label}
+                        </span>
+                    </div>
+                    """,
+                    unsafe_allow_html=True,
                 )
-            )
-            st.plotly_chart(fig, use_container_width=True)
 
-            st.success(f"Risk Score: **{risk_score} / 100** — {label}")
-            st.write(f"Scanned Website: **{target_url}**")
+                # Gauge
+                fig = go.Figure(
+                    go.Indicator(
+                        mode="gauge+number",
+                        value=risk_score,
+                        gauge={
+                            "axis": {"range": [0, 100]},
+                            "bar": {"color": "black"},
+                            "steps": [
+                                {"range": [0, 40], "color": "#d4f6e4"},
+                                {"range": [40, 70], "color": "#fff3cd"},
+                                {"range": [70, 100], "color": "#f8d7da"},
+                            ],
+                        },
+                        number={"font": {"size": 40}},
+                        title={"text": ""},
+                    )
+                )
+                st.plotly_chart(fig, use_container_width=True)
+
+                # Summary
+                st.markdown(
+                    f"""
+                    **Summary**
+
+                    - Website: **{url}**  
+                    - Classification: **{display_label}**  
+                    - Risk Score: **{risk_score:.1f} / 100**  
+                    """,
+                    unsafe_allow_html=True,
+                )
+
+                # Log for session history (if you still want it)
+                update_log(st.session_state, url, risk_class)
+
+                # Optional PDF report
+                pdf_bytes = generate_pdf_report(url, risk_class, risk_score)
+                st.download_button(
+                    "📄 Download PDF Report",
+                    pdf_bytes,
+                    "fraudshield_report.pdf",
+                    mime="application/pdf",
+                )
+
+                st.markdown("</div>", unsafe_allow_html=True)
+
 
 
 
@@ -726,6 +731,7 @@ st.markdown(
     "<p class='fs-footer'>FraudShield — Professional Real-Time Website Risk Evaluation</p>",
     unsafe_allow_html=True,
 )
+
 
 
 
