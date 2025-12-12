@@ -267,24 +267,35 @@ with tab_scanner:
     st.write("")  # add small spacing
 
     with st.form("hidden_scan_form"):
-        # hidden input for JS
         hidden_url = st.text_input(
             "",
             key="fs_hidden_url",
             label_visibility="collapsed"
         )
 
-        # hidden submit button
         run_scan = st.form_submit_button(
             "SCAN NOW",
-            help="hidden-scan-button",
+            help="hidden-button",
         )
 
-    # Add DOM IDs so JS can find them
+    # ---------------- FIX: STABLE DOM ID ATTACHMENT ----------------
     st.markdown("""
     <script>
-    document.querySelector('input[id="fs_hidden_url"]').setAttribute('id','fs_hidden_input');
-    document.querySelector('button[aria-label="SCAN NOW"]').setAttribute('id','fs_hidden_button');
+    const observer = new MutationObserver(() => {
+        // Find the Streamlit hidden input
+        const inputElem = document.querySelector('input[aria-label=" "]');
+        const btnElem = document.querySelector('button[title="hidden-button"]');
+
+        if (inputElem && !inputElem.id) {
+            inputElem.id = "fs_hidden_input";
+        }
+
+        if (btnElem && !btnElem.id) {
+            btnElem.id = "fs_hidden_button";
+        }
+    });
+
+    observer.observe(document.body, { childList: true, subtree: true });
     </script>
     """, unsafe_allow_html=True)
 
@@ -741,6 +752,7 @@ st.markdown(
     "<p class='fs-footer'>FraudShield — Professional Real-Time Website Risk Evaluation</p>",
     unsafe_allow_html=True,
 )
+
 
 
 
