@@ -154,79 +154,88 @@ tab_scanner, tab_model, tab_api, tab_threats, tab_arch, tab_logic = st.tabs(
 # =========================================================
 with tab_scanner:
 
-    # --- SiteLock-style Scanner UI using pure Streamlit ---
+    # ------------------ CUSTOM STYLE ------------------
     st.markdown("""
     <style>
-    .scan-container {
+    .scan-wrapper {
         width: 100%;
         display: flex;
         justify-content: center;
-        margin-top: 20px;
-        margin-bottom: 30px;
+        margin-top: 30px;
+        margin-bottom: 20px;
     }
     .scan-box {
-        display: flex;
         width: 650px;
         max-width: 95%;
+        display: flex;
+        align-items: center;
     }
     .scan-input {
         flex: 1;
-        font-size: 18px !important;
-        padding: 16px !important;
-        border: 1px solid #cbd5e1;
+        padding: 16px 20px;
+        font-size: 18px;
+        border: 1px solid #d1d5db;
         border-right: none;
         border-radius: 6px 0 0 6px;
+        background: white;
     }
-    .scan-button {
-        background-color: #1C89C9;
+    .scan-btn {
+        background: #1C89C9;
         color: white;
-        font-weight: 700;
+        padding: 16px 30px;
         font-size: 17px;
-        padding: 16px 25px;
+        font-weight: bold;
         border: none;
         border-radius: 0 6px 6px 0;
         cursor: pointer;
-        height: 100%;
-        width: 170px;
     }
-    .scan-button:hover {
-        background-color: #166d9c;
+    .scan-btn:hover {
+        background: #166d9c;
     }
     </style>
     """, unsafe_allow_html=True)
 
-    # ---------------- SCANNER BAR ----------------
-    st.markdown("<div class='scan-container'><div class='scan-box'>", unsafe_allow_html=True)
+    # ------------------ VISIBLE SCAN BAR ------------------
+    st.markdown("""
+    <div class="scan-wrapper">
+        <div class="scan-box">
+            <input type="text" id="fs_input" class="scan-input" placeholder="Enter your website domain" />
+            <button class="scan-btn" onclick="submitScan()">SCAN NOW</button>
+        </div>
+    </div>
 
-    col_input, col_button = st.columns([6, 2])
+    <script>
+    function submitScan() {
+        const value = document.getElementById("fs_input").value;
+        const hiddenInput = window.parent.document.querySelector('input[data-testid="stTextInput"]');
+        hiddenInput.value = value;
+        hiddenInput.dispatchEvent(new Event("input", { bubbles: true }));
 
-    with col_input:
-        url = st.text_input(
-            "",
-            placeholder="Enter your website domain",
-            key="scanner_url",
-            label_visibility="collapsed"
-        )
+        const submitBtn = window.parent.document.querySelector('button[data-scan="hidden"]');
+        submitBtn.click();
+    }
+    </script>
+    """, unsafe_allow_html=True)
 
-    with col_button:
-        clicked = st.button("SCAN NOW", key="scan_button")
+    # ------------------ HIDDEN STREAMLIT FORM ------------------
+    with st.form("hidden_scan_form"):
+        hidden_url = st.text_input("", key="hidden_url", label_visibility="collapsed")
+        submit = st.form_submit_button("SCAN NOW", type="primary", help="", disabled=False, kwargs={"data-scan": "hidden"})
 
-    st.markdown("</div></div>", unsafe_allow_html=True)
-    # ----------------------------------------------
-
-    # ---------------- RUN SCAN ----------------
-    if clicked:
-        if not url.strip():
+    # ------------------ RUN THE SCAN ------------------
+    if submit:
+        if not hidden_url.strip():
             st.error("Please enter a valid URL.")
         else:
-            with st.spinner("Scanning website…"):
-                scan_result = run_fraudshield_scan(url)
+            with st.spinner("Scanning website..."):
+                result = run_fraudshield_scan(hidden_url)
 
-            if not scan_result:
-                st.error("API error — could not scan the website.")
+            if result:
+                st.success("Scan Complete!")
             else:
-                # (Your existing result rendering logic goes here)
-                st.success("Scan completed successfully!")
+                st.error("Unable to reach API.")
+
+
 
 
 
@@ -611,6 +620,7 @@ st.markdown(
     "<p class='fs-footer'>FraudShield — Professional Real-Time Website Risk Evaluation</p>",
     unsafe_allow_html=True,
 )
+
 
 
 
