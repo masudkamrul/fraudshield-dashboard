@@ -1,5 +1,7 @@
 streamlit
 requests
-fpdf
 pandas
-
+fpdf
+matplotlib
+plotly
+numpy
