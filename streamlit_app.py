@@ -379,14 +379,14 @@ with tab_model:
 
     st.write(
         """
-FraudShield uses a compact but carefully designed machine-learning model,
-combined with deterministic safety rules, to convert security and trust signals
-into an interpretable website risk score.
+FraudShield is a purpose-built fraud intelligence system that combines
+machine-learning predictions with deterministic security rules to evaluate
+the risk of deceptive, fraudulent, or unsafe websites in real time.
         """
     )
 
     # -----------------------------------------------------
-    # PERFORMANCE METRICS (EXECUTIVE VIEW)
+    # EXECUTIVE PERFORMANCE METRICS
     # -----------------------------------------------------
     col1, col2, col3 = st.columns(3)
     col1.metric("Model Accuracy", "95%")
@@ -396,7 +396,7 @@ into an interpretable website risk score.
     st.markdown(
         """
 These metrics reflect balanced performance across detection accuracy,
-false-positive control, and robustness when evaluating diverse websites.
+false-positive control, and robustness when evaluating diverse real-world websites.
         """
     )
 
@@ -411,32 +411,66 @@ false-positive control, and robustness when evaluating diverse websites.
         [
             {
                 "Input Feature": "Domain Age (days)",
-                "Description": "Newly registered domains are statistically more likely to be associated with fraud and scam activity.",
+                "Description": "Fraudulent websites are frequently registered shortly before being used in scams.",
             },
             {
-                "Input Feature": "HTTPS Flag",
-                "Description": "Websites without HTTPS expose users to interception and are a common indicator of low trust.",
+                "Input Feature": "HTTPS / SSL Enforcement",
+                "Description": "Lack of proper HTTPS configuration is a strong indicator of low trust.",
             },
             {
                 "Input Feature": "HSTS Indicator",
-                "Description": "HTTP Strict Transport Security indicates enforcement of secure transport mechanisms.",
+                "Description": "HTTP Strict Transport Security signals enforcement of secure transport.",
             },
             {
                 "Input Feature": "CSP Indicator",
-                "Description": "Content Security Policy helps prevent malicious script injection and content abuse.",
+                "Description": "Content Security Policy helps prevent malicious script injection.",
             },
             {
                 "Input Feature": "Mixed Content Ratio",
-                "Description": "Loading insecure resources on secure pages increases exploitation risk.",
+                "Description": "Secure pages loading insecure resources increase exploitation risk.",
             },
             {
                 "Input Feature": "Threat Intelligence Flag",
-                "Description": "Signals from known phishing or malware blacklists override probabilistic scoring.",
+                "Description": "Known phishing or malware sources override probabilistic scoring.",
             },
         ]
     )
 
     st.table(model_inputs)
+
+    st.markdown("---")
+
+    # -----------------------------------------------------
+    # REAL-WORLD FRAUD BEHAVIOR MAPPING
+    # -----------------------------------------------------
+    st.markdown("### 🌐 Mapping Model Signals to Real-World Fraud Behavior")
+
+    fraud_mapping = pd.DataFrame(
+        [
+            {
+                "Observed Fraud Pattern": "Short-lived scam storefronts",
+                "Model Signal Used": "Domain Age",
+                "Why It Matters": "Scam sites often disappear within weeks to avoid enforcement",
+            },
+            {
+                "Observed Fraud Pattern": "Fake checkout or payment pages",
+                "Model Signal Used": "HTTPS / SSL Misconfiguration",
+                "Why It Matters": "Improper HTTPS exposes users during transactions",
+            },
+            {
+                "Observed Fraud Pattern": "Credential harvesting sites",
+                "Model Signal Used": "Missing CSP / HSTS",
+                "Why It Matters": "Weak headers enable script injection and data theft",
+            },
+            {
+                "Observed Fraud Pattern": "Malware and phishing campaigns",
+                "Model Signal Used": "Threat Intelligence Flags",
+                "Why It Matters": "Known malicious domains require immediate blocking",
+            },
+        ]
+    )
+
+    st.table(fraud_mapping)
 
     st.markdown("---")
 
@@ -448,15 +482,14 @@ false-positive control, and robustness when evaluating diverse websites.
     st.write(
         """
 Before inference, raw website signals are normalized and assembled into a
-structured feature vector to ensure consistent and stable scoring behavior.
+stable feature vector to ensure consistent scoring across environments.
         """
     )
 
     st.code(
         """
-# Example of internal feature preparation
 features = [
-    domain_age_days,        # Integer (e.g., 184)
+    domain_age_days,        # Integer
     https_flag,             # 1 if HTTPS enabled, else 0
     hsts_flag,              # 1 if HSTS detected
     csp_flag,               # 1 if CSP detected
@@ -470,10 +503,7 @@ features = [
 
     st.code(
         """
-# Machine-learning model outputs probability of fraud-like behavior
 proba = model.predict_proba([features])[0][1]
-
-# Convert probability to 0–100 risk scale
 raw_score = proba * 100.0
         """,
         language="python",
@@ -482,7 +512,7 @@ raw_score = proba * 100.0
     st.markdown("---")
 
     # -----------------------------------------------------
-    # FEATURE IMPORTANCE (INTERPRETABILITY)
+    # FEATURE IMPORTANCE
     # -----------------------------------------------------
     st.markdown("### 📊 Feature Importance (Illustrative)")
 
@@ -503,60 +533,178 @@ raw_score = proba * 100.0
 
     st.markdown(
         """
-This breakdown illustrates how FraudShield prioritizes **structural trust signals**
-over superficial website content, reducing susceptibility to evasion.
+FraudShield prioritizes **infrastructure-level trust signals**, which are
+significantly harder for attackers to manipulate than surface-level website content.
         """
     )
 
     st.markdown("---")
 
     # -----------------------------------------------------
-    # 🔐 MODEL GOVERNANCE & RELIABILITY (NEW – CRITICAL)
+    # LIVE INTERNET PERFORMANCE CONSIDERATIONS
     # -----------------------------------------------------
-    st.markdown("### 🔐 Model Governance & Reliability")
+    st.markdown("### ⚙️ Performance in Live Internet Conditions")
 
-    st.write(
-        """
-FraudShield is designed for real-world deployment, with governance mechanisms
-that ensure reliability, transparency, and safety over time.
-        """
+    deployment_df = pd.DataFrame(
+        [
+            {
+                "Design Consideration": "Real-time inference",
+                "FraudShield Approach": "Lightweight features enable low-latency scoring",
+            },
+            {
+                "Design Consideration": "Evasion resistance",
+                "FraudShield Approach": "Relies on infrastructure signals costly for fraudsters to fake",
+            },
+            {
+                "Design Consideration": "Data sparsity",
+                "FraudShield Approach": "Does not require user history or traffic data",
+            },
+            {
+                "Design Consideration": "Rapid fraud evolution",
+                "FraudShield Approach": "Rules + ML allow fast updates without retraining",
+            },
+        ]
     )
+
+    st.table(deployment_df)
+
+    st.markdown("---")
+
+    # -----------------------------------------------------
+    # FALSE POSITIVE / FALSE NEGATIVE CONTROL
+    # -----------------------------------------------------
+    st.markdown("### 🎯 False Positive & False Negative Control")
+
+    fp_fn_df = pd.DataFrame(
+        [
+            {
+                "Risk Type": "False Positives",
+                "Mitigation Strategy": "Gradual risk tiers instead of binary blocking",
+            },
+            {
+                "Risk Type": "False Negatives",
+                "Mitigation Strategy": "Threat intelligence overrides ML predictions",
+            },
+            {
+                "Risk Type": "Ambiguous Websites",
+                "Mitigation Strategy": "Classified as Suspicious rather than Safe",
+            },
+            {
+                "Risk Type": "High-Confidence Threats",
+                "Mitigation Strategy": "Automatically escalated to High Risk or Blacklisted",
+            },
+        ]
+    )
+
+    st.table(fp_fn_df)
+
+    st.markdown("---")
+
+    # -----------------------------------------------------
+    # HUMAN-CENTERED INTERPRETABILITY
+    # -----------------------------------------------------
+    st.markdown("### 🧑‍💼 Human-Centered Risk Interpretation")
+
+    human_df = pd.DataFrame(
+        [
+            {"Output Element": "Risk Score (%)", "Purpose": "Quantitative comparison across websites"},
+            {"Output Element": "Risk Class", "Purpose": "Immediate human-readable decision"},
+            {"Output Element": "Threat Category", "Purpose": "Explains why the site is risky"},
+            {"Output Element": "Color Severity", "Purpose": "Visual urgency for rapid response"},
+        ]
+    )
+
+    st.table(human_df)
+
+    st.markdown("---")
+
+    # -----------------------------------------------------
+    # PLATFORM ALIGNMENT (FIND ME LLC)
+    # -----------------------------------------------------
+    st.markdown("### 🔗 Alignment with Platform Use Cases")
+
+    platform_df = pd.DataFrame(
+        [
+            {
+                "Platform Scenario": "User profile outbound links",
+                "Model Benefit": "Evaluates third-party websites before users interact",
+            },
+            {
+                "Platform Scenario": "Creator portfolios",
+                "Model Benefit": "Reduces scams disguised as professional services",
+            },
+            {
+                "Platform Scenario": "Marketplace redirects",
+                "Model Benefit": "Detects fraudulent checkout environments",
+            },
+            {
+                "Platform Scenario": "External engagement flows",
+                "Model Benefit": "Preserves platform trust beyond hosted content",
+            },
+        ]
+    )
+
+    st.table(platform_df)
+
+    st.markdown("---")
+
+    # -----------------------------------------------------
+    # GOVERNANCE & RESPONSIBLE AI
+    # -----------------------------------------------------
+    st.markdown("### 🔐 Model Governance & Responsible AI")
 
     governance_df = pd.DataFrame(
         [
             {
                 "Governance Aspect": "Explainability",
-                "Implementation": "Rule-based calibration layered on top of ML probabilities",
+                "Implementation": "Rules layered on ML probabilities",
             },
             {
-                "Governance Aspect": "Bias Mitigation",
-                "Implementation": "Model evaluates website-level signals only; no user attributes involved",
-            },
-            {
-                "Governance Aspect": "False-Negative Protection",
-                "Implementation": "Blacklist and threat-intelligence flags override ML output",
-            },
-            {
-                "Governance Aspect": "Model Drift Awareness",
-                "Implementation": "Designed to incorporate retraining as new fraud patterns emerge",
+                "Governance Aspect": "Bias Control",
+                "Implementation": "No personal or demographic data used",
             },
             {
                 "Governance Aspect": "Operational Safety",
-                "Implementation": "Intermediate risk tiers enable manual review or policy escalation",
+                "Implementation": "Intermediate risk tiers enable escalation",
+            },
+            {
+                "Governance Aspect": "Future Adaptability",
+                "Implementation": "Designed for retraining as fraud patterns evolve",
             },
         ]
     )
 
     st.table(governance_df)
 
+    st.markdown("---")
+
+    # -----------------------------------------------------
+    # WHY THIS IS NOT A GENERIC ML MODEL
+    # -----------------------------------------------------
+    st.markdown("### 🧠 Why This Is Not a Generic Machine-Learning Model")
+
+    st.write(
+        """
+FraudShield is not a general-purpose data science experiment.
+It is a preventive, real-time fraud intelligence system designed to protect
+users from deceptive online environments before harm occurs.
+        """
+    )
+
     st.markdown(
         """
-These safeguards make FraudShield suitable for deployment in consumer-facing
-platforms, enterprise systems, and regulated environments.
+Key distinguishing characteristics include:
+
+- Real-time operation during live browsing and platform interactions  
+- Integration of machine learning with deterministic security rules  
+- Infrastructure-level signals resistant to manipulation  
+- Designed for deployment across consumer platforms and enterprises  
+- Direct alignment with cybersecurity and consumer-protection objectives  
         """
     )
 
     st.markdown("</div>", unsafe_allow_html=True)
+
 
 
 
@@ -840,6 +988,7 @@ st.markdown(
     "<p class='fs-footer'>FraudShield — Professional Real-Time Website Risk Evaluation</p>",
     unsafe_allow_html=True,
 )
+
 
 
 
