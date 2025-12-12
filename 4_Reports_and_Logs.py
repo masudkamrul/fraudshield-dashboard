@@ -1,5 +1,6 @@
 import streamlit as st
 import pandas as pd
+from utils import update_log
 
 st.title("📊 Reports & Logs")
 
@@ -20,3 +21,4 @@ if st.session_state["history"]:
     )
 else:
     st.info("No logs yet.")
+
