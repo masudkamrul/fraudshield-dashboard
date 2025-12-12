@@ -619,7 +619,7 @@ significantly harder for attackers to manipulate than surface-level website cont
     st.markdown("---")
 
     # -----------------------------------------------------
-    # PLATFORM ALIGNMENT (FIND ME LLC)
+    # PLATFORM ALIGNMENT
     # -----------------------------------------------------
     st.markdown("### 🔗 Alignment with Platform Use Cases")
 
@@ -725,7 +725,7 @@ with tab_api:
 
     st.write(
         """
-This section demonstrates how external platforms (e.g., FindMe LLC) can integrate FraudShield
+This section demonstrates how external platforms can integrate FraudShield
 as a lightweight safety layer for outbound links. It includes live testing, response inspection,
 latency visibility, and batch-evaluation workflows that mirror real platform needs.
         """
@@ -883,7 +883,7 @@ Below is an example response structure to help platform teams implement stable p
     st.markdown("---")
 
     # -----------------------------------------------------
-    # BATCH SCAN DEMO (VERY USEFUL FOR FINDME)
+    # BATCH SCAN DEMO 
     # -----------------------------------------------------
     st.markdown("### 📦 Batch Scan Demo")
 
@@ -1171,9 +1171,9 @@ non-technical stakeholders and enables clear platform actions such as warnings, 
     st.markdown("---")
 
     # -----------------------------------------------------
-    # ACTION POLICY MATRIX (FINDME-READY)
+    # ACTION POLICY MATRIX 
     # -----------------------------------------------------
-    st.markdown("### 🧩 Platform Action Policy Matrix (Recommended for FindMe)")
+    st.markdown("### 🧩 Platform Action Policy Matrix")
 
     policy = pd.DataFrame(
         [
@@ -1283,7 +1283,7 @@ with tab_arch:
     st.write(
         """
 FraudShield is implemented as a modular pipeline that can be easily integrated
-into platforms such as FindMe, browser extensions, and backend fraud engines.
+into platforms, browser extensions, and backend fraud engines.
         """
     )
 
@@ -1320,7 +1320,7 @@ into platforms such as FindMe, browser extensions, and backend fraud engines.
 6. **Delivery to Clients**  
    Results are delivered to:
    - Chrome extension overlay (user warnings)  
-   - Platforms like FindMe (link safety checks)  
+   - Platforms (link safety checks)  
    - This dashboard (for demonstration and analysis).  
         """
     )
@@ -1435,6 +1435,7 @@ st.markdown(
     "<p class='fs-footer'>FraudShield — Professional Real-Time Website Risk Evaluation</p>",
     unsafe_allow_html=True,
 )
+
 
 
 
