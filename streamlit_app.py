@@ -18,7 +18,7 @@ st.set_page_config(
 )
 
 # ---------------------------------------------------------
-# CORPORATE CLEAN CSS + PREMIUM TAB BAR
+# CORPORATE CLEAN CSS + PREMIUM CENTERED TAB BAR (FINAL)
 # ---------------------------------------------------------
 st.markdown(
     """
@@ -93,14 +93,24 @@ st.markdown(
     }
 
     /* =====================================================
-       PREMIUM CENTERED TAB BAR
+       ✅ TRUE CENTERED TAB BAR (FINAL FIX)
        ===================================================== */
 
-    /* Center the tabs */
+    /* Center the entire tabs container */
+    div[data-testid="stTabs"] {
+        display: flex;
+        justify-content: center;
+    }
+
+    /* Constrain tab width and center it */
     div[data-testid="stTabs"] > div[role="tablist"] {
         display: flex;
         justify-content: center;
         gap: 28px;
+
+        max-width: 900px;
+        width: fit-content;
+
         border-bottom: 2px solid #e5e7eb;
         padding-bottom: 6px;
         margin-bottom: 18px;
@@ -200,7 +210,6 @@ tab_scanner, tab_model, tab_api, tab_threats, tab_arch, tab_logic = st.tabs(
         "Risk Scoring Logic",
     ]
 )
-
 
 
 
@@ -1898,6 +1907,7 @@ st.markdown(
     "<p class='fs-footer'>FraudShield — Professional Real-Time Website Risk Evaluation</p>",
     unsafe_allow_html=True,
 )
+
 
 
 
