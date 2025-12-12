@@ -49,7 +49,6 @@ st.markdown(
         box-shadow: 0 2px 5px rgba(15,23,42,0.03);
     }
 
-    /* Section header bars */
     .section-header {
         padding: 10px 16px;
         border-radius: 6px;
@@ -58,32 +57,13 @@ st.markdown(
         margin-bottom: 14px;
         font-size: 18px;
     }
+
     .section-blue { background: #2563eb; }
     .section-purple { background: #6d28d9; }
     .section-orange { background: #ea580c; }
     .section-green { background: #16a34a; }
     .section-red { background: #b91c1c; }
     .section-grey { background: #4b5563; }
-
-    /* URL Input Style - scanner */
-    .stTextInput>div>div>input {
-        font-size: 18px !important;
-        padding: 14px 16px !important;
-        height: 55px !important;
-        border-radius: 8px !important;
-        border: 1.6px solid #b0b8c4 !important;
-    }
-
-    /* Info box */
-    .info-box {
-        background: #eef2ff;
-        border-left: 4px solid #4f46e5;
-        padding: 10px 14px;
-        border-radius: 6px;
-        font-size: 14px;
-        color: #374151;
-        margin-top: 8px;
-    }
 
     .fs-footer {
         text-align: center;
@@ -100,43 +80,108 @@ st.markdown(
 # ---------------------------------------------------------
 # HEADER
 # ---------------------------------------------------------
-st.markdown("<h1 class='main-title'>🛡️ FraudShield – Website Risk Evaluation Dashboard</h1>", unsafe_allow_html=True)
 st.markdown(
-    "<p class='subtitle'>Professional interface to demonstrate how FraudShield evaluates website safety using machine learning and security signals.</p>",
+    "<h1 class='main-title'>🛡️ FraudShield – Website Risk Evaluation Dashboard</h1>",
+    unsafe_allow_html=True
+)
+st.markdown(
+    "<p class='subtitle'>Professional interface demonstrating real-time website risk evaluation using machine learning and security intelligence.</p>",
     unsafe_allow_html=True
 )
 
 # ---------------------------------------------------------
-# RISK CLASS → LABEL + COLOR (MATCHES EXTENSION)
+# RISK CLASS → LABEL + COLOR
 # ---------------------------------------------------------
 def map_risk_style(risk_class: str, blacklist_flag: int = 0):
-    """
-    Map backend risk_class + blacklist flag to the same
-    labels & colors used in the Chrome extension.
-    """
-
-    # Blacklisted overrides everything
     if blacklist_flag:
         return "☠️ Blacklisted Threat", "#B71C1C"
-
     if risk_class == "Safe":
         return "🟢 Safe", "#4CAF50"
-
     if risk_class == "Low Risk":
         return "🟡 Low Risk", "#FFC107"
-
     if risk_class == "Suspicious":
         return "🟠 Suspicious", "#FF9800"
-
     if risk_class == "High Risk":
         return "🔴 High Risk", "#F44336"
-
-    # Fallback
     return "❓ Unknown", "#95a5a6"
 
 
+# =========================================================
+# 🔥 DYNAMIC HERO CONTROLLER (NEW)
+# =========================================================
+if "active_tab" not in st.session_state:
+    st.session_state.active_tab = "Scanner"
+
+def render_dynamic_hero(tab_name: str):
+    hero_map = {
+        "Scanner": {
+            "title": "Free Website Malware & Security Scanner",
+            "subtitle": "Instantly analyze websites for fraud, deception, and security risks.",
+            "image": "https://images.unsplash.com/photo-1556155092-490a1ba16284"
+        },
+        "Model Intelligence": {
+            "title": "Explainable Machine Learning Intelligence",
+            "subtitle": "Understand how trust signals are transformed into risk decisions.",
+            "image": "https://images.unsplash.com/photo-1555949963-aa79dcee981c"
+        },
+        "API Explorer": {
+            "title": "Production-Grade Risk Scoring API",
+            "subtitle": "Integrate real-time website risk intelligence into any platform.",
+            "image": "https://images.unsplash.com/photo-1558494949-ef010cbdcc31"
+        },
+        "Threat Categories": {
+            "title": "Threat Classification Framework",
+            "subtitle": "Translate raw signals into human-readable security risk categories.",
+            "image": "https://images.unsplash.com/photo-1504639725590-34d0984388bd"
+        },
+        "Architecture": {
+            "title": "Scalable & Secure System Architecture",
+            "subtitle": "Designed for real-world deployment and high-volume environments.",
+            "image": "https://images.unsplash.com/photo-1544197150-b99a580bb7a8"
+        },
+        "Risk Scoring Logic": {
+            "title": "Transparent Risk Decision Engine",
+            "subtitle": "Hybrid ML + policy logic for explainable fraud prevention.",
+            "image": "https://images.unsplash.com/photo-1581092580497-e0d23cbdf1dc"
+        }
+    }
+
+    data = hero_map[tab_name]
+
+    st.markdown(
+        f"""
+        <div style="
+            background-image: linear-gradient(
+                rgba(15,60,104,0.75),
+                rgba(15,60,104,0.75)
+            ),
+            url('{data["image"]}');
+            background-size: cover;
+            background-position: center;
+            padding: 65px 30px;
+            border-radius: 16px;
+            margin-bottom: 30px;
+        ">
+            <h1 style="color:white; font-size:36px; font-weight:700; text-align:center;">
+                {data["title"]}
+            </h1>
+            <p style="color:#dbeafe; font-size:18px; text-align:center; margin-top:10px;">
+                {data["subtitle"]}
+            </p>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+
+
 # ---------------------------------------------------------
-# TABS
+# 🎯 RENDER HERO BEFORE TABS
+# ---------------------------------------------------------
+render_dynamic_hero(st.session_state.active_tab)
+
+
+# ---------------------------------------------------------
+# TABS (UNCHANGED)
 # ---------------------------------------------------------
 tab_scanner, tab_model, tab_api, tab_threats, tab_arch, tab_logic = st.tabs(
     [
@@ -161,6 +206,7 @@ import streamlit.components.v1 as components
 import plotly.graph_objects as go
 
 with tab_scanner:
+st.session_state.active_tab = "Scanner"
 
     hero_html = """
     <style>
@@ -374,6 +420,7 @@ with tab_scanner:
 # 2️⃣ MODEL INTELLIGENCE TAB
 # =========================================================
 with tab_model:
+    st.session_state.active_tab = "Model Intelligence"
     st.markdown("<div class='fs-card'>", unsafe_allow_html=True)
     st.markdown("<div class='section-header section-purple'>🧠 Model Intelligence</div>", unsafe_allow_html=True)
 
@@ -720,6 +767,7 @@ Key distinguishing characteristics include:
 # 3️⃣ API EXPLORER TAB (UPGRADED FOR ENTERPRISE DEMO)
 # =========================================================
 with tab_api:
+    st.session_state.active_tab = "Api Explorer"
     st.markdown("<div class='fs-card'>", unsafe_allow_html=True)
     st.markdown("<div class='section-header section-blue'>🔌 API Explorer</div>", unsafe_allow_html=True)
 
@@ -1051,6 +1099,7 @@ normally use the platform.
 # 4️⃣ THREAT CATEGORIES TAB (UPGRADED: PLATFORM SAFETY TAXONOMY)
 # =========================================================
 with tab_threats:
+st.session_state.active_tab = "Threat Categories"
     st.markdown("<div class='fs-card'>", unsafe_allow_html=True)
     st.markdown("<div class='section-header section-orange'>⚠️ Threat Categories</div>", unsafe_allow_html=True)
 
@@ -1277,6 +1326,7 @@ consistent user messaging, moderation policies, and safety experiences.
 # 5️⃣ SYSTEM ARCHITECTURE TAB (ENTERPRISE-GRADE)
 # =========================================================
 with tab_arch:
+    st.session_state.active_tab = "Architecture"
     st.markdown("<div class='fs-card'>", unsafe_allow_html=True)
     st.markdown(
         "<div class='section-header section-green'>🏗️ System Architecture</div>",
@@ -1574,6 +1624,7 @@ component** suitable for modern digital platforms operating at scale.
 # 6️⃣ RISK SCORING LOGIC TAB (ENTERPRISE-GRADE)
 # =========================================================
 with tab_logic:
+    st.session_state.active_tab = "Risk Scoring Logic"
     st.markdown("<div class='fs-card'>", unsafe_allow_html=True)
     st.markdown("<div class='section-header section-red'>📐 Risk Scoring Logic</div>", unsafe_allow_html=True)
 
@@ -1845,6 +1896,7 @@ st.markdown(
     "<p class='fs-footer'>FraudShield — Professional Real-Time Website Risk Evaluation</p>",
     unsafe_allow_html=True,
 )
+
 
 
 
