@@ -151,92 +151,83 @@ tab_scanner, tab_model, tab_api, tab_threats, tab_arch, tab_logic = st.tabs(
 
 
 # =========================================================
-# 1️⃣ SCANNER TAB — FIXED HERO SECTION (HTML NOW RENDERS)
+# 1️⃣ SCANNER TAB — FINAL FIXED HERO SECTION
 # =========================================================
+import streamlit as st
+import streamlit.components.v1 as components
+
 with tab_scanner:
 
-    # HERO CSS
-    st.markdown("""
+    # ---------------- HERO + SCANNER HTML ----------------
+    hero_html = """
     <style>
+        .hero-section {
+            width: 100%;
+            background: linear-gradient(90deg, #1F4E79, #1C6FB5);
+            padding: 70px 20px 80px 20px;
+            text-align: center;
+            border-radius: 10px;
+            margin-bottom: 40px;
+        }
 
-    /* HERO BACKGROUND */
-    .hero-section {
-        width: 100%;
-        background: linear-gradient(90deg, #1F4E79, #1C6FB5);
-        padding: 70px 20px 80px 20px;
-        text-align: center;
-        border-radius: 10px;
-        margin-bottom: 40px;
-    }
+        .hero-title {
+            color: white;
+            font-size: 38px;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
 
-    .hero-title {
-        color: white;
-        font-size: 38px;
-        font-weight: 700;
-        margin-bottom: 10px;
-    }
+        .hero-subtitle {
+            color: #e2e8f0;
+            font-size: 18px;
+            margin-bottom: 35px;
+        }
 
-    .hero-subtitle {
-        color: #e2e8f0;
-        font-size: 18px;
-        margin-bottom: 35px;
-    }
+        .scan-container {
+            display: flex;
+            justify-content: center;
+            width: 100%;
+        }
 
-    /* ------------------------
-       SCANNER BAR
-    -------------------------*/
-    .scan-container {
-        display: flex;
-        justify-content: center;
-        width: 100%;
-    }
+        .scan-box {
+            display: flex;
+            width: 720px;
+            max-width: 95%;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
 
-    .scan-box {
-        display: flex;
-        width: 720px;
-        max-width: 95%;
-        background: white;
-        border-radius: 8px;
-        overflow: hidden;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-    }
+        .scan-input {
+            flex: 1;
+            padding: 18px 20px;
+            font-size: 18px;
+            border: none;
+            outline: none;
+        }
 
-    .scan-input {
-        flex: 1;
-        padding: 18px 20px;
-        font-size: 18px;
-        border: none;
-        outline: none;
-    }
+        .scan-btn {
+            background: #1C89C9;
+            border: none;
+            padding: 18px 28px;
+            font-size: 17px;
+            color: white;
+            font-weight: 700;
+            cursor: pointer;
+            white-space: nowrap;
+        }
 
-    .scan-btn {
-        background: #1C89C9;
-        border: none;
-        padding: 18px 28px;
-        font-size: 17px;
-        color: white;
-        font-weight: 700;
-        cursor: pointer;
-        white-space: nowrap;
-    }
-
-    .scan-btn:hover {
-        background: #166d9c;
-    }
-
-    /* Hide Streamlit's auto-rendered input + button */
-    div[data-testid="stTextInput"] { display: none !important; }
-    button[data-scan="hidden"] { display: none !important; }
-
+        .scan-btn:hover {
+            background: #166d9c;
+        }
     </style>
-    """, unsafe_allow_html=True)
 
-
-    # ================= HERO HTML ====================
-    st.markdown("""
     <div class="hero-section">
         <div class="hero-title">Free Website Malware & Security Scanner</div>
-        <div class="hero-subtitle">Enter a website to check for vulnerabilities, fraud signals, and security issues.</div>
+        <div class="hero-subtitle">
+            Enter a website to check for vulnerabilities, fraud signals, and security issues.
+        </div>
 
         <div class="scan-container">
             <div class="scan-box">
@@ -247,27 +238,30 @@ with tab_scanner:
     </div>
 
     <script>
-    function submitFraudShieldScan() {
-        const url = document.getElementById("fs_url").value;
+        function submitFraudShieldScan() {
+            const url = document.getElementById("fs_url").value;
 
-        const hiddenInput = window.parent.document.querySelector('input[data-testid="stTextInput"]');
-        hiddenInput.value = url;
-        hiddenInput.dispatchEvent(new Event("input", { bubbles: true }));
+            const hiddenInput = window.parent.document.querySelector('input[data-testid="stTextInput"]');
+            hiddenInput.value = url;
+            hiddenInput.dispatchEvent(new Event("input", { bubbles: true }));
 
-        const hiddenBtn = window.parent.document.querySelector('button[data-scan="hidden"]');
-        hiddenBtn.click();
-    }
+            const hiddenBtn = window.parent.document.querySelector('button[data-scan="hidden"]');
+            hiddenBtn.click();
+        }
     </script>
-    """, unsafe_allow_html=True)
+    """
+
+    # 🚀 Render HTML correctly (prevents escaping)
+    components.html(hero_html, height=350)
 
 
-    # ============= HIDDEN STREAMLIT FORM (backend handler) =============
+    # ---------------- HIDDEN STREAMLIT FORM ----------------
     with st.form("fraudshield_hidden_form"):
         hidden_url = st.text_input("", key="fs_hidden_url", label_visibility="collapsed")
         run_scan = st.form_submit_button("SCAN NOW", kwargs={"data-scan": "hidden"})
 
 
-    # ============= EXECUTE SCAN + SHOW RESULTS =============
+    # ---------------- PROCESS THE SCAN ----------------
     if run_scan:
         if not hidden_url.strip():
             st.error("Please enter a valid URL.")
@@ -284,7 +278,6 @@ with tab_scanner:
 
                 label, color = map_risk_style(risk_class, blacklist_flag)
 
-                # Badge
                 st.markdown(
                     f"""
                     <div style="text-align:center;margin-top:25px;">
@@ -302,7 +295,6 @@ with tab_scanner:
                     unsafe_allow_html=True
                 )
 
-                # Gauge
                 fig = go.Figure(
                     go.Indicator(
                         mode="gauge+number",
@@ -316,14 +308,14 @@ with tab_scanner:
                                 {"range": [70, 100], "color": "#f8d7da"},
                             ],
                         },
-                        number={"font": {"size": 48}},
+                        number={"font": {"size": 48}}
                     )
                 )
                 st.plotly_chart(fig, use_container_width=True)
 
-                # Summary
                 st.success(f"Risk Score: **{risk_score} / 100** — {label}")
                 st.write(f"Scanned Website: **{hidden_url}**")
+
 
 
 
@@ -717,5 +709,6 @@ st.markdown(
     "<p class='fs-footer'>FraudShield — Professional Real-Time Website Risk Evaluation</p>",
     unsafe_allow_html=True,
 )
+
 
 
