@@ -261,9 +261,28 @@ with tab_scanner:
 
 
     # ---------------- HIDDEN STREAMLIT FORM ----------------
-    with st.form("fraudshield_hidden_form"):
-        hidden_url = st.text_input("", key="fs_hidden_url", label_visibility="collapsed")
-        run_scan = st.form_submit_button("SCAN NOW", kwargs={"data-scan": "hidden"})
+        with st.form("fraudshield_hidden_form"):
+            hidden_url = st.text_input(
+                "", 
+                key="fs_hidden_url", 
+                label_visibility="collapsed"
+            )
+        
+            run_scan = st.form_submit_button(
+                "SCAN NOW",
+                help="hidden scan button",
+                kwargs={},
+                type="primary"
+            )
+        
+        # VERY IMPORTANT: Give them HTML IDs after rendering
+        st.markdown("""
+        <script>
+        document.querySelector('input[id="fs_hidden_url"]').setAttribute('id', 'fs_hidden_input');
+        document.querySelector('button[aria-label="SCAN NOW"]').setAttribute('id', 'fs_hidden_button');
+        </script>
+        """, unsafe_allow_html=True)
+
 
 
     # ---------------- PROCESS THE SCAN ----------------
@@ -717,6 +736,7 @@ st.markdown(
     "<p class='fs-footer'>FraudShield — Professional Real-Time Website Risk Evaluation</p>",
     unsafe_allow_html=True,
 )
+
 
 
 
