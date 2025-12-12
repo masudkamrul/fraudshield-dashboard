@@ -887,7 +887,7 @@ Below is an example response structure to help platform teams implement stable p
     # -----------------------------------------------------
     # BATCH SCAN DEMO (VERY USEFUL FOR FINDME)
     # -----------------------------------------------------
-    st.markdown("### 📦 Batch Scan Demo (FindMe-Style Workflow)")
+    st.markdown("### 📦 Batch Scan Demo")
 
     st.write(
         """
@@ -1279,6 +1279,7 @@ st.markdown(
     "<p class='fs-footer'>FraudShield — Professional Real-Time Website Risk Evaluation</p>",
     unsafe_allow_html=True,
 )
+
 
 
 
